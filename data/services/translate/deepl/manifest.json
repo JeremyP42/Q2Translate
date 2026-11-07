@@ -1,0 +1,48 @@
+{
+  "id": "deepl",
+  "name": "DeepL",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 30,
+  "icon": "icon.png",
+  "description": "DeepL API с пользовательским ключом.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": [
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://api-free.deepl.com/v2/translate"
+    },
+    {
+      "key": "formality",
+      "type": "select",
+      "label": "Formality",
+      "options": [
+        {
+          "label": "Default",
+          "value": "default"
+        },
+        {
+          "label": "More",
+          "value": "more"
+        },
+        {
+          "label": "Less",
+          "value": "less"
+        }
+      ],
+      "default": "default"
+    }
+  ],
+  "enabled_by_default": false
+}

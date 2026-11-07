@@ -1,0 +1,22 @@
+{
+  "id": "google_translate",
+  "name": "Google Translate",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 10,
+  "icon": "icon.png",
+  "description": "Бесплатный веб-переводчик Google без API-ключа.",
+  "capabilities": [
+    "translate",
+    "detect"
+  ],
+  "settings_schema": [
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://translate.googleapis.com/translate_a/single"
+    }
+  ]
+}

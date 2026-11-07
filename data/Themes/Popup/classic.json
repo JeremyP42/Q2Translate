@@ -1,0 +1,44 @@
+{
+  "id": "classic",
+  "name": "Классика",
+  "order": 1,
+  "width": 380,
+  "radius": 6,
+  "borderWidth": 1,
+  "fontFamily": "Tahoma",
+  "background": { "token": "surface" },
+  "border": { "token": "border", "darken": 0.04 },
+  "header": { "visible": false },
+  "source": {
+    "fontSize": 11,
+    "lineHeight": 1.4,
+    "italic": false,
+    "color": { "token": "muted" },
+    "background": { "token": "surfaceAlt", "lighten": 0.03 },
+    "padding": [8, 28, 7, 12],
+    "maxHeight": 46,
+    "borderBottom": true
+  },
+  "translation": {
+    "fontSize": 14,
+    "lineHeight": 1.4,
+    "color": { "token": "text" },
+    "padding": [10, 12, 10, 12],
+    "maxHeight": 126
+  },
+  "actions": {
+    "placement": "bottom",
+    "padding": [4, 8, 6, 8],
+    "gap": 2,
+    "buttonWidth": 28,
+    "buttonHeight": 26,
+    "background": { "token": "surfaceAlt", "lighten": 0.02 },
+    "borderTop": true,
+    "opacity": 1.0,
+    "revealOnHover": false,
+    "textButton": true,
+    "textLabel": "Перевод"
+  },
+  "twoColumns": false,
+  "close": { "size": 28 }
+}

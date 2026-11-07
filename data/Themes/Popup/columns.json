@@ -1,0 +1,54 @@
+{
+  "id": "columns",
+  "name": "Две колонки",
+  "order": 3,
+  "width": 620,
+  "radius": 12,
+  "borderWidth": 1,
+  "fontFamily": "Segoe UI",
+  "background": { "token": "surface" },
+  "border": { "token": "border", "darken": 0.03 },
+  "header": {
+    "visible": true,
+    "fontSize": 11,
+    "fontWeight": 600,
+    "uppercase": true,
+    "letterSpacing": 0.8,
+    "color": { "token": "muted" },
+    "padding": [7, 14, 7, 14],
+    "borderBottom": true
+  },
+  "source": {
+    "fontSize": 13,
+    "lineHeight": 1.45,
+    "italic": false,
+    "color": { "token": "muted" },
+    "background": null,
+    "padding": [11, 14, 11, 14],
+    "maxHeight": 132,
+    "borderBottom": false,
+    "borderRight": true
+  },
+  "translation": {
+    "fontSize": 14,
+    "lineHeight": 1.5,
+    "color": { "token": "text" },
+    "padding": [11, 14, 11, 14],
+    "maxHeight": 132
+  },
+  "actions": {
+    "placement": "bottom",
+    "padding": [5, 8, 5, 8],
+    "gap": 2,
+    "buttonWidth": 28,
+    "buttonHeight": 26,
+    "background": { "token": "surfaceAlt", "lighten": 0.02 },
+    "borderTop": true,
+    "opacity": 1.0,
+    "revealOnHover": false,
+    "textButton": false,
+    "textLabel": ""
+  },
+  "twoColumns": true,
+  "close": { "size": 28 }
+}

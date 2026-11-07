@@ -1,0 +1,16 @@
+{
+  "id": "nuspell",
+  "name": "Nuspell",
+  "version": "1.0.0",
+  "type": "spelling",
+  "engine": "native",
+  "native_provider": "nuspell",
+  "order": 15,
+  "enabled_by_default": true,
+  "icon": "icon.png",
+  "description": "Полноценная проверка орфографии Nuspell: аффиксы, составные слова и подсказки. Использует словари Hunspell из папки коннектора.",
+  "capabilities": [
+    "spelling"
+  ],
+  "settings_schema": []
+}

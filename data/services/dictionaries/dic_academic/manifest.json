@@ -1,0 +1,18 @@
+{
+  "id": "dic_academic",
+  "name": "Dic.academic",
+  "version": "1.0.0",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 32,
+  "host": "https://dic.academic.ru",
+  "mode": "search",
+  "service_script": "../academic_common/service.js",
+  "icon": "icon.png",
+  "description": "Словари и энциклопедии на Academic.ru: поиск по всем словарям сайта.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": false
+}

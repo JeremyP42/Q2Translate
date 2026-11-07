@@ -1,0 +1,16 @@
+{
+  "id": "google_tts",
+  "name": "Google TTS",
+  "version": "1.0.0",
+  "type": "tts",
+  "engine": "native",
+  "native_provider": "tts",
+  "order": 302,
+  "enabled_by_default": true,
+  "icon": "icon.png",
+  "description": "Сетевое озвучивание Google без API-ключа.",
+  "capabilities": [
+    "tts"
+  ],
+  "settings_schema": []
+}

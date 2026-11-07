@@ -1,0 +1,106 @@
+{
+  "id": "mozhi",
+  "name": "Mozhi",
+  "version": "1.0.2",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 55,
+  "icon": "icon.png",
+  "description": "Публичный или собственный Mozhi-сервер с выбранным upstream-движком. Автоматического переключения на другой движок нет.",
+  "capabilities": [
+    "translate",
+    "detect"
+  ],
+  "settings_schema": [
+    {
+      "key": "instance",
+      "type": "select",
+      "label": "Endpoint",
+      "options": [
+        {
+          "label": "Project Segfau",
+          "value": "https://translate.projectsegfau.lt"
+        },
+        {
+          "label": "Ducks Party",
+          "value": "https://mozhi.ducks.party"
+        },
+        {
+          "label": "PussTheCat",
+          "value": "https://mozhi.pussthecat.org"
+        },
+        {
+          "label": "AdminForge",
+          "value": "https://mozhi.adminforge.de"
+        },
+        {
+          "label": "NerdVPN",
+          "value": "https://translate.nerdvpn.de"
+        },
+        {
+          "label": "Privacy Redirect",
+          "value": "https://translate.privacyredirect.com"
+        },
+        {
+          "label": "Canine Tools",
+          "value": "https://mozhi.canine.tools"
+        },
+        {
+          "label": "DC09",
+          "value": "https://mzh.dc09.ru"
+        },
+        {
+          "label": "Frankly Flawless",
+          "value": "https://mozhi.franklyflawless.org"
+        },
+        {
+          "label": "Self-hosted",
+          "value": "custom"
+        }
+      ],
+      "default": "https://mozhi.adminforge.de"
+    },
+    {
+      "key": "custom_instance",
+      "type": "string",
+      "label": "Self-hosted URL",
+      "default": ""
+    },
+    {
+      "key": "engine",
+      "type": "select",
+      "label": "Engine",
+      "options": [
+        {
+          "label": "Yandex",
+          "value": "Yandex"
+        },
+        {
+          "label": "Google",
+          "value": "Google"
+        },
+        {
+          "label": "DeepL",
+          "value": "DeepL"
+        },
+        {
+          "label": "DuckDuckGo",
+          "value": "DuckDuckGo"
+        },
+        {
+          "label": "LibreTranslate",
+          "value": "LibreTranslate"
+        },
+        {
+          "label": "MyMemory",
+          "value": "MyMemory"
+        },
+        {
+          "label": "Reverso",
+          "value": "Reverso"
+        }
+      ],
+      "default": "Yandex"
+    }
+  ]
+}

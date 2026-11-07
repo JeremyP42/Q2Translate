@@ -1,0 +1,6 @@
+{
+    "translate": "Translate the following text from {source} to {target}. Return ONLY the translation without explanations, quotes or language labels.\n\n{text}",
+    "summarize": "Summarize the following text in 3 concise bullet points. Answer in the same language as the source text.\n\n{text}",
+    "paraphrase": "Rewrite the following text in a more formal style. Return only the rewritten text.\n\n{text}",
+    "dictionary": "Explain the word or phrase \"{text}\" in {target}. Include part of speech, meanings and 1-2 short examples. Return plain text."
+}

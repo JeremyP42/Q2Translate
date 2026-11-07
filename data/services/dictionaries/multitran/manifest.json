@@ -1,0 +1,15 @@
+{
+  "id": "multitran",
+  "name": "Multitran",
+  "version": "1.0.1",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 80,
+  "icon": "icon.png",
+  "description": "Многоязычный словарь Multitran.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": false
+}

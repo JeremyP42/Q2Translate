@@ -1,0 +1,51 @@
+{
+  "id": "gemini",
+  "name": "Gemini (Google)",
+  "version": "1.0.0",
+  "type": "llm",
+  "engine": "javascript",
+  "order": 45,
+  "link": "https://generativelanguage.googleapis.com/v1beta/models",
+  "icon": "icon.png",
+  "description": "LLM Gemini через Google Generative Language API: перевод, суммаризация, перефразирование, словарь.",
+  "capabilities": [
+    "translate",
+    "summarize",
+    "paraphrase",
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://generativelanguage.googleapis.com/v1beta/models"
+    },
+    {
+      "key": "model",
+      "type": "string",
+      "label": "Model",
+      "default": "gemini-2.5-flash"
+    },
+    {
+      "key": "temperature",
+      "type": "number",
+      "label": "Temperature",
+      "default": 0.2
+    },
+    {
+      "key": "system_prompt",
+      "type": "text",
+      "label": "Системный промпт",
+      "variables": true,
+      "default": "Ты — переводчик. Переводи с {src} на {dst}. Следуй инструкции пользователя в сообщении."
+    }
+  ],
+  "enabled_by_default": false
+}

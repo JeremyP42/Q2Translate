@@ -1,0 +1,15 @@
+{
+  "id": "lara_translate",
+  "name": "Lara Translate",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 222,
+  "icon": "icon.png",
+  "description": "Lara Translate: прямой JSON endpoint /translate.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": false
+}

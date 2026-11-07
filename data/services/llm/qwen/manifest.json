@@ -1,0 +1,52 @@
+{
+  "engine": "javascript",
+  "link": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+  "icon": "icon.png",
+  "description": "LLM через API Qwen (DashScope): перевод, суммаризация, перефразирование, словарь.",
+  "capabilities": [
+    "translate",
+    "summarize",
+    "paraphrase",
+    "dictionary"
+  ],
+  "order": 43,
+  "version": "1.0.0",
+  "name": "Qwen (DashScope)",
+  "settings_schema": [
+    {
+      "type": "password",
+      "label": "API Key",
+      "required": true,
+      "key": "api_key"
+    },
+    {
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "key": "endpoint"
+    },
+    {
+      "type": "models",
+      "label": "Model",
+      "endpoint_key": "endpoint",
+      "default": "qwen-plus",
+      "key": "model"
+    },
+    {
+      "type": "number",
+      "label": "Temperature",
+      "default": 0.2,
+      "key": "temperature"
+    },
+    {
+      "type": "text",
+      "label": "Системный промпт",
+      "default": "Ты — переводчик. Переводи с {src} на {dst}. Следуй инструкции пользователя в сообщении.",
+      "variables": true,
+      "key": "system_prompt"
+    }
+  ],
+  "type": "llm",
+  "id": "qwen",
+  "enabled_by_default": false
+}

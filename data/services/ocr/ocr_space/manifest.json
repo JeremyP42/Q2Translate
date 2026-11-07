@@ -1,0 +1,77 @@
+{
+  "id": "ocr_space",
+  "name": "OCR.space",
+  "version": "1.0.0",
+  "type": "ocr",
+  "engine": "javascript",
+  "order": 20,
+  "icon": "icon.png",
+  "description": "Облачный OCR через api.ocr.space. Требуется бесплатный API-ключ.",
+  "capabilities": [
+    "ocr",
+    "ocr_vision"
+  ],
+  "settings_schema": [
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://api.ocr.space/parse/image"
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": "Language",
+      "options": [
+        {
+          "label": "English",
+          "value": "eng"
+        },
+        {
+          "label": "Russian",
+          "value": "rus"
+        },
+        {
+          "label": "German",
+          "value": "ger"
+        },
+        {
+          "label": "French",
+          "value": "fre"
+        },
+        {
+          "label": "Spanish",
+          "value": "spa"
+        },
+        {
+          "label": "Auto",
+          "value": "auto"
+        }
+      ],
+      "default": "eng"
+    },
+    {
+      "key": "engine",
+      "type": "select",
+      "label": "Engine",
+      "options": [
+        {
+          "label": "Engine 2",
+          "value": "2"
+        },
+        {
+          "label": "Engine 1",
+          "value": "1"
+        }
+      ],
+      "default": "2"
+    }
+  ],
+  "enabled_by_default": false
+}

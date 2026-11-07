@@ -1,0 +1,27 @@
+{
+  "id": "mymemory",
+  "name": "MyMemory",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 20,
+  "icon": "icon.png",
+  "description": "Бесплатный перевод через MyMemory с ограничением по объёму.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": [
+    {
+      "key": "email",
+      "type": "string",
+      "label": "Email (необязательно)",
+      "default": ""
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://api.mymemory.translated.net/get"
+    }
+  ]
+}

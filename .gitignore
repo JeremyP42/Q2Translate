@@ -1,0 +1,86 @@
+# Q2Translate repository contents
+#
+# The repository keeps only the inputs needed to build the portable
+# application from a clean clone. Build output, the assembled package,
+# screenshots, logs and the toolchain stay local.
+#
+# The assembled application is rebuilt by tools/deploy_portable.ps1 and is
+# never committed.
+#
+# Build from a clean clone:
+#   pwsh -ExecutionPolicy Bypass -File ./tools/download_toolchain.ps1
+#   ./.toolchain/cmake/bin/cmake.exe -S . -B work -G Ninja -DCMAKE_BUILD_TYPE=Release
+#   ./.toolchain/cmake/bin/cmake.exe --build work
+#   pwsh -ExecutionPolicy Bypass -File ./tools/deploy_portable.ps1 -SkipBuild
+#
+# The release archives in build/ are intentionally not tracked: the full
+# archive exceeds GitHub's 100 MB file limit. Publish both the full and the
+# small archive as GitHub Release assets instead.
+
+# ---------------------------------------------------------------------------
+# Whitelist: ignore every top-level entry, then re-include the build inputs.
+# ---------------------------------------------------------------------------
+/*
+!/.gitignore
+!/.gitattributes
+!/CMakeLists.txt
+!/LICENSE
+!/README.md
+!/README_rus.md
+!/THIRD_PARTY_NOTICES.md
+!/settings-default.json
+!/src/
+!/data/
+!/docs/
+!/resources/
+!/third_party/
+!/tools/
+!/design/
+
+# ---------------------------------------------------------------------------
+# Explicitly ignored local artifacts (kept for clarity and for tools that
+# create them outside the whitelisted paths).
+# ---------------------------------------------------------------------------
+/.toolchain/
+/build/
+/cmake-build-*/
+/plugins/
+
+# C++ / Qt generated files
+*.o
+*.obj
+*.pch
+*.pdb
+*.ilk
+*.exp
+*.idb
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.moc
+*.qmlc
+*.jsc
+*.pro.user
+*.qmlproject.user
+
+# IDE / OS files
+.vs/
+.idea/
+.vscode/
+*.user
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Local logs and reports
+*.log
+tools/audit_*.txt
+contrast_report.txt
+
+# Local configuration
+CMakeUserPresets.json
+opencode.json
+.env
+.env.*
+!.env.example

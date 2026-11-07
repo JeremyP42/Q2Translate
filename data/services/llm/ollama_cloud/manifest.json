@@ -1,0 +1,52 @@
+{
+  "id": "ollama_cloud",
+  "name": "Ollama Cloud",
+  "version": "1.0.0",
+  "type": "llm",
+  "engine": "javascript",
+  "order": 47,
+  "icon": "icon.png",
+  "description": "Облачные модели Ollama через ollama.com. Требуется API-ключ Ollama.",
+  "capabilities": [
+    "translate",
+    "summarize",
+    "paraphrase",
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "API Endpoint",
+      "default": "https://ollama.com/v1",
+      "required": true
+    },
+    {
+      "key": "model",
+      "type": "models",
+      "label": "Model",
+      "endpoint_key": "endpoint",
+      "required": true
+    },
+    {
+      "key": "temperature",
+      "type": "number",
+      "label": "Temperature",
+      "default": 0.2
+    },
+    {
+      "key": "system_prompt",
+      "type": "text",
+      "label": "Системный промпт",
+      "variables": true,
+      "default": "Ты — точный переводчик. Переводи с {src} на {dst}. Соблюдай инструкцию пользователя и возвращай только результат."
+    }
+  ],
+  "enabled_by_default": false
+}

@@ -1,0 +1,34 @@
+{
+  "id": "promt",
+  "name": "PROMT",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 235,
+  "enabled_by_default": false,
+  "icon": "icon.png",
+  "description": "Веб-переводчик PROMT.One. Требует cookie и XSRF-токен из браузера.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": [
+    {
+      "key": "PromtCookie",
+      "type": "string",
+      "label": "Cookie",
+      "default": ""
+    },
+    {
+      "key": "PromtPaft",
+      "type": "string",
+      "label": "aft token",
+      "default": ""
+    },
+    {
+      "key": "PromtXsrf",
+      "type": "string",
+      "label": "XSRF token",
+      "default": ""
+    }
+  ]
+}

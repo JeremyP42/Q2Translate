@@ -1,0 +1,15 @@
+{
+  "id": "imtranslator",
+  "name": "ImTranslator Dictionary",
+  "version": "1.0.1",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 85,
+  "icon": "icon.png",
+  "description": "Словарные статьи ImTranslator.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": false
+}

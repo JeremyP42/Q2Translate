@@ -1,0 +1,15 @@
+{
+  "id": "translateeu",
+  "name": "TranslateEU",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 243,
+  "icon": "icon.png",
+  "description": "Веб-переводчик translate.eu на базе LibreTranslate.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": false
+}

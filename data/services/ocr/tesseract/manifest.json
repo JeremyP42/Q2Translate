@@ -1,0 +1,23 @@
+{
+  "id": "tesseract_local",
+  "name": "Tesseract OCR (Local)",
+  "version": "1.0.0",
+  "type": "ocr",
+  "engine": "native",
+  "order": 10,
+  "icon": "icon.png",
+  "description": "Локальное распознавание текста через Tesseract.",
+  "native_executable": "tesseract.exe",
+  "tessdata_path": "tessdata",
+  "capabilities": [
+    "ocr"
+  ],
+  "settings_schema": [
+    {
+      "key": "default_lang",
+      "type": "tessdata_languages",
+      "label": "Язык по умолчанию",
+      "default": "eng"
+    }
+  ]
+}

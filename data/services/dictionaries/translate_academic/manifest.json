@@ -1,0 +1,18 @@
+{
+  "id": "translate_academic",
+  "name": "Translate.academic",
+  "version": "1.0.0",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 33,
+  "host": "https://translate.academic.ru",
+  "mode": "path",
+  "service_script": "../academic_common/service.js",
+  "icon": "icon.png",
+  "description": "Перевод и примеры употребления на Academic.ru (translate.academic.ru).",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": false
+}

@@ -1,0 +1,29 @@
+{
+  "id": "baidu",
+  "name": "Baidu",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 229,
+  "link": "https://fanyi-api.baidu.com/api/trans/vip/translate",
+  "icon": "icon.png",
+  "description": "Baidu Translate через официальный API. Требуются AppID и ключ приложения.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": [
+    {
+      "key": "app_id",
+      "type": "string",
+      "label": "AppID",
+      "required": true
+    },
+    {
+      "key": "app_key",
+      "type": "password",
+      "label": "Ключ",
+      "required": true
+    }
+  ],
+  "enabled_by_default": false
+}

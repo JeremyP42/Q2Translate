@@ -1,0 +1,13 @@
+{
+  "id": "balancer",
+  "name": "Балансировщик",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "native",
+  "native_provider": "balancer",
+  "order": 0,
+  "description": "Прослойка между приложением и коннекторами перевода/LLM: выбирает основной коннектор и при ошибке или таймауте перебирает резервные.",
+  "capabilities": ["translate", "llm"],
+  "enabled_by_default": true,
+  "settings_schema": []
+}

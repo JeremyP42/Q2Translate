@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="style.qss">style.qss</file>
+        <file alias="themes.json">themes.json</file>
+        <file alias="lang-base.json">lang-base.json</file>
+        <file alias="icons/arrow-down.svg">arrow-down.svg</file>
+        <file alias="icons/arrow-up.svg">arrow-up.svg</file>
+        <file alias="icons/check.svg">check.svg</file>
+        <file alias="icons/radio-checked.svg">radio-checked.svg</file>
+    </qresource>
+</RCC>

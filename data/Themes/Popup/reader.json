@@ -1,0 +1,44 @@
+{
+  "id": "reader",
+  "name": "Читательский",
+  "order": 2,
+  "width": 400,
+  "radius": 14,
+  "borderWidth": 1,
+  "fontFamily": "Georgia",
+  "background": { "token": "surface" },
+  "border": { "token": "border", "lighten": 0.06 },
+  "header": { "visible": false },
+  "source": {
+    "fontSize": 12,
+    "lineHeight": 1.5,
+    "italic": true,
+    "color": { "token": "muted" },
+    "background": null,
+    "padding": [13, 16, 0, 16],
+    "maxHeight": 0,
+    "borderBottom": false
+  },
+  "translation": {
+    "fontSize": 15,
+    "lineHeight": 1.52,
+    "color": { "token": "text" },
+    "padding": [5, 16, 12, 16],
+    "maxHeight": 0
+  },
+  "actions": {
+    "placement": "inline",
+    "padding": [0, 8, 8, 8],
+    "gap": 2,
+    "buttonWidth": 28,
+    "buttonHeight": 26,
+    "background": null,
+    "borderTop": false,
+    "opacity": 0.35,
+    "revealOnHover": true,
+    "textButton": false,
+    "textLabel": ""
+  },
+  "twoColumns": false,
+  "close": { "size": 26 }
+}

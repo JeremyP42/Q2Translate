@@ -1,0 +1,45 @@
+{
+  "id": "online_wiktionary",
+  "name": "Wiktionary",
+  "version": "1.0.0",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 10,
+  "icon": "icon.png",
+  "description": "Онлайн-словарь Wiktionary.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "language",
+      "type": "select",
+      "label": "Wiktionary language",
+      "options": [
+        {
+          "label": "English",
+          "value": "en"
+        },
+        {
+          "label": "Russian",
+          "value": "ru"
+        },
+        {
+          "label": "German",
+          "value": "de"
+        },
+        {
+          "label": "French",
+          "value": "fr"
+        },
+        {
+          "label": "Spanish",
+          "value": "es"
+        }
+      ],
+      "default": "en"
+    }
+  ],
+  "link": "https://<language>.wiktionary.org/api/rest_v1/page/definition/",
+  "enabled_by_default": false
+}

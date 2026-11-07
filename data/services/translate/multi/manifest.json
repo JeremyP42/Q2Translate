@@ -1,0 +1,23 @@
+{
+  "id": "multi",
+  "name": "Multi",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 229,
+  "icon": "icon.png",
+  "description": "Мультисервисный переводчик: опрашивает несколько движков и выбирает лучший результат.",
+  "capabilities": [
+    "translate",
+    "detect"
+  ],
+  "settings_schema": [
+    {
+      "key": "ActiveServices",
+      "type": "string",
+      "label": "Active services (google, yandex, lara, translateeu, mymemory)",
+      "default": ""
+    }
+  ],
+  "enabled_by_default": false
+}

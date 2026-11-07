@@ -1,0 +1,53 @@
+{
+  "id": "ollama",
+  "name": "Ollama (Local)",
+  "version": "1.0.0",
+  "type": "llm",
+  "engine": "javascript",
+  "order": 46,
+  "icon": "icon.png",
+  "description": "Локальная LLM через Ollama с OpenAI-совместимым API. Работает без интернета.",
+  "capabilities": [
+    "translate",
+    "summarize",
+    "paraphrase",
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "API Endpoint",
+      "default": "http://127.0.0.1:11434/v1",
+      "required": true
+    },
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "default": "",
+      "required": false
+    },
+    {
+      "key": "model",
+      "type": "models",
+      "label": "Model",
+      "endpoint_key": "endpoint",
+      "required": true
+    },
+    {
+      "key": "temperature",
+      "type": "number",
+      "label": "Temperature",
+      "default": 0.2
+    },
+    {
+      "key": "system_prompt",
+      "type": "text",
+      "label": "Системный промпт",
+      "variables": true,
+      "default": "Ты — точный переводчик. Переводи с {src} на {dst}. Соблюдай инструкцию пользователя и возвращай только результат."
+    }
+  ],
+  "enabled_by_default": false
+}

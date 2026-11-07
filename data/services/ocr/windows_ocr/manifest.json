@@ -1,0 +1,15 @@
+{
+  "id": "windows_ocr",
+  "name": "Windows OCR (встроенный)",
+  "version": "1.0.0",
+  "type": "ocr",
+  "engine": "native",
+  "native_provider": "windows_ocr",
+  "order": 5,
+  "icon": "icon.png",
+  "description": "Распознавание текста встроенным OCR Windows 10/11.",
+  "capabilities": [
+    "ocr"
+  ],
+  "settings_schema": []
+}

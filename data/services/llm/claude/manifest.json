@@ -1,0 +1,51 @@
+{
+  "id": "claude",
+  "name": "Claude (Anthropic)",
+  "version": "1.0.0",
+  "type": "llm",
+  "engine": "javascript",
+  "order": 44,
+  "link": "https://api.anthropic.com/v1/messages",
+  "icon": "icon.png",
+  "description": "LLM Claude через Anthropic Messages API: перевод, суммаризация, перефразирование, словарь.",
+  "capabilities": [
+    "translate",
+    "summarize",
+    "paraphrase",
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://api.anthropic.com/v1/messages"
+    },
+    {
+      "key": "model",
+      "type": "string",
+      "label": "Model",
+      "default": "claude-sonnet-4-5"
+    },
+    {
+      "key": "temperature",
+      "type": "number",
+      "label": "Temperature",
+      "default": 0.2
+    },
+    {
+      "key": "system_prompt",
+      "type": "text",
+      "label": "Системный промпт",
+      "variables": true,
+      "default": "Ты — переводчик. Переводи с {src} на {dst}. Следуй инструкции пользователя в сообщении."
+    }
+  ],
+  "enabled_by_default": false
+}

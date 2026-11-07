@@ -1,0 +1,16 @@
+{
+  "id": "hunspell",
+  "name": "Hunspell",
+  "version": "1.0.0",
+  "type": "spelling",
+  "engine": "native",
+  "native_provider": "hunspell",
+  "order": 10,
+  "enabled_by_default": true,
+  "icon": "icon.png",
+  "description": "Локальная проверка орфографии по словарям Hunspell. Словари скачиваются в папку коннектора.",
+  "capabilities": [
+    "spelling"
+  ],
+  "settings_schema": []
+}

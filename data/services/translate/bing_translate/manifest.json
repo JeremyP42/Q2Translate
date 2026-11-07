@@ -1,0 +1,15 @@
+{
+  "id": "bing_translate",
+  "name": "Bing Translator",
+  "version": "1.0.1",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 20,
+  "icon": "icon.png",
+  "description": "Bing Translator через веб-сессию и официальный ttranslatev3.",
+  "capabilities": [
+    "translate",
+    "detect"
+  ],
+  "settings_schema": []
+}

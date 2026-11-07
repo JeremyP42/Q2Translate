@@ -1,0 +1,15 @@
+{
+  "id": "lara",
+  "name": "LaraTranslate",
+  "version": "1.0.1",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 221,
+  "enabled_by_default": false,
+  "icon": "icon.png",
+  "description": "LaraTranslate: старый segmented API, переводит длинный текст частями.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": []
+}

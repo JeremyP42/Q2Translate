@@ -1,0 +1,16 @@
+{
+  "id": "yandexinl",
+  "name": "Yandex Translate",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 248,
+  "icon": "icon.png",
+  "description": "Перевод через веб-API Яндекс.Переводчика.",
+  "capabilities": [
+    "translate",
+    "detect"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": true
+}

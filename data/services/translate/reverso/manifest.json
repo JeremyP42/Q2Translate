@@ -1,0 +1,14 @@
+{
+  "id": "reverso",
+  "name": "Reverso Translation",
+  "version": "1.0.2",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 60,
+  "icon": "icon.png",
+  "description": "Бесплатный веб-перевод Reverso для европейских языков.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": []
+}

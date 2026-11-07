@@ -1,0 +1,15 @@
+{
+  "id": "urban_dictionary",
+  "name": "Urban Dictionary",
+  "version": "1.0.1",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 90,
+  "icon": "icon.png",
+  "description": "Городской словарь английского сленга.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": false
+}

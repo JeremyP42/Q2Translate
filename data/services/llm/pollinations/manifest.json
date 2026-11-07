@@ -1,0 +1,45 @@
+{
+  "id": "pollinations",
+  "name": "Pollinations AI",
+  "version": "1.0.0",
+  "type": "llm",
+  "engine": "javascript",
+  "order": 48,
+  "icon": "icon.png",
+  "description": "Бесплатный OpenAI-совместимый LLM-сервис Pollinations. Работает без API-ключа.",
+  "capabilities": [
+    "translate",
+    "summarize",
+    "paraphrase",
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "API Endpoint",
+      "default": "https://text.pollinations.ai/openai",
+      "required": true
+    },
+    {
+      "key": "model",
+      "type": "string",
+      "label": "Model",
+      "default": "openai"
+    },
+    {
+      "key": "temperature",
+      "type": "number",
+      "label": "Temperature",
+      "default": 0.2
+    },
+    {
+      "key": "system_prompt",
+      "type": "text",
+      "label": "Системный промпт",
+      "variables": true,
+      "default": "Ты — точный переводчик. Переводи с {src} на {dst}. Соблюдай инструкцию пользователя и возвращай только результат."
+    }
+  ],
+  "enabled_by_default": false
+}

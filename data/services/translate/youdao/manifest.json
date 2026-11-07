@@ -1,0 +1,15 @@
+{
+  "id": "youdao",
+  "name": "Youdao",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 228,
+  "link": "https://fanyi.youdao.com/",
+  "icon": "icon.png",
+  "description": "Онлайн-переводчик Youdao. Сессия и ключ шифрования получаются автоматически.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": []
+}

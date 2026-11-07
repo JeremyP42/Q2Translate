@@ -1,0 +1,52 @@
+{
+  "id": "openai_gpt4o",
+  "name": "OpenAI GPT-4o",
+  "version": "1.0.0",
+  "type": "llm",
+  "engine": "javascript",
+  "order": 40,
+  "icon": "icon.png",
+  "description": "OpenAI-совместимый LLM: перевод, суммаризация, перефраз, OCR по изображению.",
+  "capabilities": [
+    "translate",
+    "summarize",
+    "paraphrase",
+    "ocr_vision",
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Endpoint",
+      "default": "https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "key": "model",
+      "type": "models",
+      "label": "Model",
+      "default": "gpt-4o-mini",
+      "endpoint_key": "endpoint"
+    },
+    {
+      "key": "temperature",
+      "type": "number",
+      "label": "Temperature",
+      "default": 0.2
+    },
+    {
+      "key": "system_prompt",
+      "type": "text",
+      "label": "Системный промпт",
+      "variables": true,
+      "default": "Ты — точный переводчик. Переводи с {src} на {dst}. Соблюдай инструкцию пользователя и возвращай только результат."
+    }
+  ],
+  "enabled_by_default": false
+}

@@ -1,0 +1,35 @@
+{
+  "id": "google_new",
+  "name": "Google Translate (web)",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 214,
+  "icon": "icon.png",
+  "description": "Веб-переводчик Google Translate с поддержкой автоопределения языка.",
+  "capabilities": [
+    "translate",
+    "detect"
+  ],
+  "settings_schema": [
+    {
+      "key": "GoogleDomain",
+      "type": "string",
+      "label": "Google domain",
+      "default": "com"
+    },
+    {
+      "key": "PreferredDomain",
+      "type": "string",
+      "label": "Preferred domain",
+      "default": ""
+    },
+    {
+      "key": "LanguageCode",
+      "type": "string",
+      "label": "Interface language",
+      "default": ""
+    }
+  ],
+  "enabled_by_default": true
+}

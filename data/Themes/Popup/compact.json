@@ -1,0 +1,53 @@
+{
+  "id": "compact",
+  "name": "Плотный",
+  "order": 4,
+  "width": 340,
+  "radius": 9,
+  "borderWidth": 1,
+  "fontFamily": "Segoe UI",
+  "background": { "token": "surface" },
+  "border": { "token": "border", "darken": 0.02 },
+  "header": {
+    "visible": true,
+    "fontSize": 11,
+    "fontWeight": 600,
+    "uppercase": true,
+    "letterSpacing": 0.6,
+    "color": { "token": "muted" },
+    "padding": [6, 10, 6, 10],
+    "borderBottom": false
+  },
+  "source": {
+    "fontSize": 12,
+    "lineHeight": 1.4,
+    "italic": false,
+    "color": { "token": "muted" },
+    "background": null,
+    "padding": [4, 10, 0, 10],
+    "maxHeight": 0,
+    "borderBottom": false
+  },
+  "translation": {
+    "fontSize": 13,
+    "lineHeight": 1.42,
+    "color": { "token": "text" },
+    "padding": [3, 10, 9, 10],
+    "maxHeight": 118
+  },
+  "actions": {
+    "placement": "header",
+    "padding": [0, 0, 0, 0],
+    "gap": 2,
+    "buttonWidth": 26,
+    "buttonHeight": 24,
+    "background": null,
+    "borderTop": false,
+    "opacity": 1.0,
+    "revealOnHover": false,
+    "textButton": false,
+    "textLabel": ""
+  },
+  "twoColumns": false,
+  "close": { "size": 26 }
+}

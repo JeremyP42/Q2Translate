@@ -1,0 +1,15 @@
+{
+  "id": "oxford_learner_dictionary",
+  "name": "Oxford Learner's Dictionaries",
+  "version": "1.0.0",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 233,
+  "enabled_by_default": false,
+  "icon": "icon.png",
+  "description": "Онлайн-словарь Oxford Learner's Dictionaries.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": []
+}

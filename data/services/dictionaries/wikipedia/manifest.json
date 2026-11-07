@@ -1,0 +1,16 @@
+{
+  "id": "wikipedia",
+  "name": "Wikipedia",
+  "version": "1.0.0",
+  "type": "dictionaries",
+  "engine": "javascript",
+  "order": 30,
+  "icon": "icon.png",
+  "description": "Статьи и определения из Wikipedia через открытый MediaWiki API. Работает без ключа.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [],
+  "link": "https://<language>.wikipedia.org/w/api.php",
+  "enabled_by_default": false
+}

@@ -1,0 +1,36 @@
+{
+  "id": "yandex_tts",
+  "name": "Yandex SpeechKit",
+  "version": "1.0.0",
+  "type": "tts",
+  "engine": "native",
+  "native_provider": "tts",
+  "order": 303,
+  "enabled_by_default": false,
+  "icon": "icon.png",
+  "description": "Сетевое озвучивание Yandex SpeechKit по API-ключу.",
+  "capabilities": [
+    "tts"
+  ],
+  "settings_schema": [
+    {
+      "key": "api_key",
+      "label": "API-ключ",
+      "type": "text",
+      "secret": true,
+      "default": ""
+    },
+    {
+      "key": "folder_id",
+      "label": "Folder ID",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "key": "voice",
+      "label": "Голос",
+      "type": "text",
+      "default": "filipp"
+    }
+  ]
+}

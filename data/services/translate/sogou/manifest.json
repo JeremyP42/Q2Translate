@@ -1,0 +1,15 @@
+{
+  "id": "sogou",
+  "name": "Sogou",
+  "version": "1.0.0",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 242,
+  "icon": "icon.png",
+  "description": "Китайский веб-переводчик Sogou.",
+  "capabilities": [
+    "translate"
+  ],
+  "settings_schema": [],
+  "enabled_by_default": true
+}

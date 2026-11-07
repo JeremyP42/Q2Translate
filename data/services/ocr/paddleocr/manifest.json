@@ -1,0 +1,14 @@
+{
+  "id": "paddleocr",
+  "name": "PaddleOCR (ONNX, локальный)",
+  "version": "1.0.0",
+  "type": "ocr",
+  "engine": "native",
+  "native_provider": "paddleocr",
+  "order": 15,
+  "description": "Локальное распознавание PP-OCRv5 через onnxruntime. Лучше Tesseract работает на манге и скриншотах с рисунком.",
+  "capabilities": [
+    "ocr"
+  ],
+  "settings_schema": []
+}

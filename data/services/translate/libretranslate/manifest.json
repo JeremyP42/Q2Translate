@@ -1,0 +1,31 @@
+{
+  "id": "libretranslate",
+  "name": "LibreTranslate",
+  "version": "1.0.1",
+  "type": "translate",
+  "engine": "javascript",
+  "order": 50,
+  "icon": "icon.png",
+  "description": "Локальный или собственный сервер LibreTranslate.",
+  "capabilities": [
+    "translate",
+    "detect"
+  ],
+  "settings_schema": [
+    {
+      "key": "endpoint",
+      "type": "string",
+      "label": "Server URL",
+      "default": "http://localhost:5000",
+      "required": true
+    },
+    {
+      "key": "api_key",
+      "type": "password",
+      "label": "API Key",
+      "default": "",
+      "required": false
+    }
+  ],
+  "enabled_by_default": false
+}

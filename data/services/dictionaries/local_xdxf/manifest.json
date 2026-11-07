@@ -1,0 +1,24 @@
+{
+  "id": "local_xdxf",
+  "name": "Локальные XDXF-словари",
+  "version": "1.0.0",
+  "type": "dictionaries",
+  "engine": "native",
+  "native_provider": "xdxf",
+  "order": 5,
+  "icon": "icon.png",
+  "link": "http://www.dicto.org.ru/xdxf.html",
+  "description": "Локальные XDXF-словари. Словари не входят в поставку: скачайте их отдельно и укажите папку в настройках коннектора.",
+  "capabilities": [
+    "dictionary"
+  ],
+  "settings_schema": [
+    {
+      "key": "folder",
+      "label": "Папка словаря",
+      "type": "xdxf_folders",
+      "default": ""
+    }
+  ],
+  "enabled_by_default": false
+}
