@@ -3119,12 +3119,10 @@ void OptionsDialog::buildAdvanced(QVBoxLayout* layout)
     createGroup(layout, QStringLiteral("Поведение"), &group);
     addCheck(group, QStringLiteral("Advanced.EnableMouseModeOnCtrl"),
              QStringLiteral("Mouse mode только по нажатому Ctrl"));
-    addCombo(group, QStringLiteral("Advanced.CopyAction"),
-             QStringLiteral("Действие после перевода"),
-             optionsFrom({
-                 {QStringLiteral("Копировать перевод"), 0},
-                 {QStringLiteral("Ничего не делать"), 2}
-             }));
+    addCheck(group, QStringLiteral("Advanced.CopyTranslationToClipboard"),
+             QStringLiteral("Копировать перевод в буфер обмена"),
+             QStringLiteral("Автоматически копировать результат перевода, включая OCR со скриншота. "
+                            "По умолчанию включено."));
 
     createGroup(layout, QStringLiteral("Текст и звук"), &group);
     auto textSound = addTwoColumns(group);

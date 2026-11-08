@@ -34,6 +34,7 @@ private:
     void updateToolbar();
     void updateStatus();
     void recognize();
+    void handleOcrResult(const QJsonObject& result, bool showErrors = true);
     void translateResult();
     void copyResult();
     void saveSelection();

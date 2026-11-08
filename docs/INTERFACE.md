@@ -42,7 +42,7 @@ Settings are organised as a left navigation list. Changes are written to `Data/s
 | **Connectors** | Installed connectors, enable/disable, connector card, settings, model refresh. |
 | **Network** | Proxy type (system/manual/none), timeouts, retries. |
 | **Exceptions** | Applications and window classes excluded from hotkeys and mouse mode. |
-| **Additionally** | Mouse mode, post-translation action, slower speech, language indicator, screen capture. The text/sound and screen-capture groups use two columns; the balancer keeps its primary connector out of the fallback list and places the return delay and general timeout on one row. |
+| **Additionally** | Mouse mode, **Copy translation to clipboard** (on by default, applies to text and screenshot OCR), slower speech, language indicator, screen capture. The text/sound and screen-capture groups use two columns; the balancer keeps its primary connector out of the fallback list and places the return delay and general timeout on one row. |
 | **About** | Current build version and a readable feature overview with enlarged typography. |
 
 ### Appearance
@@ -142,7 +142,7 @@ The connector settings dialog is opened from **Settings → Connectors → card*
 
 ![OCR languages](images/ocr-languages.png)
 
-The OCR engine is chosen per file group - screenshots, images, PDF, DJVU - in the same settings page; the general OCR connector is used when a group is left empty. The OCR language manager downloads and removes Tesseract language data.
+The OCR engine is chosen per file group - screenshots, images, PDF, DJVU - in the same settings page; the general OCR connector is used when a group is left empty. The OCR language manager downloads and removes Tesseract language data. For screenshot capture the language dropdown has **Auto**: with several configured OCR languages, Tesseract runs each candidate and keeps the highest-confidence result.
 
 | Control | Purpose |
 |---|---|

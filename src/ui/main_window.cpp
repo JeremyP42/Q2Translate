@@ -2233,8 +2233,9 @@ void MainWindow::handleAdditionalOutput()
                             m_targetEdit->toPlainText());
     }
 
-    const int copyAction = m_settings->intValue(QStringLiteral("Advanced.CopyAction"), 2);
-    if (type != QStringLiteral("copy") && copyAction != 2)
+    const bool copyResult = m_settings->boolValue(
+        QStringLiteral("Advanced.CopyTranslationToClipboard"), true);
+    if (type != QStringLiteral("copy") && copyResult)
         QApplication::clipboard()->setText(m_targetEdit->toPlainText());
 }
 void MainWindow::onCapabilityResult(const QString& capability, const QString& serviceId,

@@ -31,6 +31,8 @@
 #include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <functional>
+#include <memory>
 
 #ifdef Q_OS_WIN
 #ifndef NOMINMAX
@@ -128,16 +130,23 @@ ScreenCaptureWindow::ScreenCaptureWindow(AppContext* context, QWidget* parent)
         const QString provider = m_provider->currentData().toString();
         const QString current = m_language->currentText();
         m_language->clear();
+        m_language->addItem(QStringLiteral("Авто"));
         if (m_context && m_context->translation) {
             for (const QString& language : m_context->translation->ocrLanguages(provider))
                 m_language->addItem(language);
         }
+        const QString configured = m_context && m_context->settings
+            ? m_context->settings->stringValue(QStringLiteral("Ocr.OcrLanguage"),
+                                               QStringLiteral("eng"))
+            : QStringLiteral("eng");
+        const bool autoDetect = configured.contains(QLatin1Char('+'))
+            || configured.compare(QStringLiteral("auto"), Qt::CaseInsensitive) == 0;
         if (!current.isEmpty())
             m_language->setCurrentText(current);
-        else if (m_context && m_context->settings)
-            m_language->setCurrentText(
-                m_context->settings->stringValue(QStringLiteral("Ocr.OcrLanguage"),
-                                                 QStringLiteral("eng")));
+        else if (autoDetect)
+            m_language->setCurrentText(QStringLiteral("Авто"));
+        else
+            m_language->setCurrentText(configured);
 
         int widest = 0;
         const QFontMetrics metrics(m_language->font());
@@ -166,43 +175,44 @@ ScreenCaptureWindow::ScreenCaptureWindow(AppContext* context, QWidget* parent)
     });
     connect(close, &QPushButton::clicked, this, &QWidget::hide);
 
-    if (m_context && m_context->translation) {
-        connect(m_context->translation, &TranslationManager::ocrResult,
-            this, [this](const QString&, const QJsonObject& result) {
-                const QString error = result.value(QStringLiteral("error")).toString();
-                const QString text = result.value(QStringLiteral("text")).toString();
-                const QString markdown = result.value(QStringLiteral("table_markdown")).toString();
-                if (!error.isEmpty()) {
-                    m_status->setText(QStringLiteral("Ошибка OCR"));
-                    QMessageBox::warning(this, QStringLiteral("OCR"), error);
-                } else {
-                    const bool table = !markdown.isEmpty();
-                    QString cleaned = table ? markdown : text;
-                    if (!table && m_context && m_context->settings
-                        && m_context->settings->boolValue(QStringLiteral("Advanced.RemoveLineBreaks"), false)) {
-                        cleaned.replace(QLatin1Char('\n'), QLatin1Char(' '));
-                        cleaned = cleaned.simplified();
-                    }
-                    m_resultText = cleaned;
-                    m_status->setText(table
-                                          ? QStringLiteral("Распознана таблица: %1 строк").arg(markdown.count(QLatin1Char('\n')) + 1)
-                                          : QStringLiteral("Распознано: %1 символов").arg(cleaned.size()));
-                    if (!m_autoAction.isEmpty()) {
-                        const QString action = m_autoAction;
-                        m_autoAction.clear();
-                        m_translateAfterOcr = false;
-                        emit textRecognized(cleaned,
-                                            action == QStringLiteral("translate"));
-                        hide();
-                        updateToolbar();
-                        return;
-                    }
-                    showResultDialog(cleaned);
-                }
-                updateToolbar();
-            });
+    updateToolbar();
+}
+
+void ScreenCaptureWindow::handleOcrResult(const QJsonObject& result, bool showErrors)
+{
+    const QString error = result.value(QStringLiteral("error")).toString();
+    const QString text = result.value(QStringLiteral("text")).toString();
+    const QString markdown = result.value(QStringLiteral("table_markdown")).toString();
+    if (!error.isEmpty()) {
+        m_status->setText(QStringLiteral("Ошибка OCR"));
+        if (showErrors)
+            QMessageBox::warning(this, QStringLiteral("OCR"), error);
+        updateToolbar();
+        return;
     }
 
+    const bool table = !markdown.isEmpty();
+    QString cleaned = table ? markdown : text;
+    if (!table && m_context && m_context->settings
+        && m_context->settings->boolValue(QStringLiteral("Advanced.RemoveLineBreaks"), false)) {
+        cleaned.replace(QLatin1Char('\n'), QLatin1Char(' '));
+        cleaned = cleaned.simplified();
+    }
+    m_resultText = cleaned;
+    m_status->setText(table
+                          ? QStringLiteral("Распознана таблица: %1 строк")
+                                .arg(markdown.count(QLatin1Char('\n')) + 1)
+                          : QStringLiteral("Распознано: %1 символов").arg(cleaned.size()));
+    if (!m_autoAction.isEmpty()) {
+        const QString action = m_autoAction;
+        m_autoAction.clear();
+        m_translateAfterOcr = false;
+        emit textRecognized(cleaned, action == QStringLiteral("translate"));
+        hide();
+        updateToolbar();
+        return;
+    }
+    showResultDialog(cleaned);
     updateToolbar();
 }
 
@@ -392,11 +402,89 @@ void ScreenCaptureWindow::recognize()
         qMax(1, int(selection.width() * scaleX)), qMax(1, int(selection.height() * scaleY)));
     const QImage image = m_screenshot.toImage().copy(sourceRect.intersected(m_screenshot.rect()));
 
-    m_status->setText(QStringLiteral("Распознавание…"));
+    const QString providerId = m_provider->currentData().toString();
+    QString requested = m_language->currentText().trimmed();
+    QStringList candidates;
+    if (requested.isEmpty() || requested == QStringLiteral("Авто")
+        || requested.compare(QStringLiteral("auto"), Qt::CaseInsensitive) == 0) {
+        if (providerId.contains(QStringLiteral("tesseract"))) {
+            const QString configured = m_context->settings
+                ? m_context->settings->stringValue(QStringLiteral("Ocr.OcrLanguage"),
+                                                   QStringLiteral("eng"))
+                : QStringLiteral("eng");
+            candidates = configured.split(QLatin1Char('+'), Qt::SkipEmptyParts);
+        } else if (m_context->translation) {
+            const QStringList available =
+                m_context->translation->ocrLanguages(providerId);
+            if (!available.isEmpty())
+                candidates.append(available.first());
+        }
+    } else {
+        candidates = requested.split(QLatin1Char('+'), Qt::SkipEmptyParts);
+    }
+    if (candidates.isEmpty())
+        candidates.append(requested.isEmpty() ? QStringLiteral("eng") : requested);
+
     m_resultText.clear();
     updateToolbar();
-    m_context->translation->ocrAsync(image, m_provider->currentData().toString(),
-                                     m_language->currentText());
+
+    if (candidates.size() == 1) {
+        m_status->setText(QStringLiteral("Распознавание: %1…").arg(candidates.first()));
+        m_context->translation->ocrRequestAsync(
+            image, providerId, candidates.first(),
+            [this](const QJsonObject& result) { handleOcrResult(result); });
+        return;
+    }
+
+    auto remaining = std::make_shared<QStringList>(candidates);
+    auto best = std::make_shared<QJsonObject>();
+    auto bestScore = std::make_shared<double>(-1.0);
+    auto lastError = std::make_shared<QString>();
+    auto runNext = std::make_shared<std::function<void()>>();
+    *runNext = [this, image, providerId, remaining, best, bestScore, lastError, runNext] {
+        if (remaining->isEmpty()) {
+            if (!best->isEmpty()) {
+                handleOcrResult(*best);
+            } else {
+                m_status->setText(QStringLiteral("Ошибка OCR"));
+                QMessageBox::warning(this, QStringLiteral("OCR"),
+                                     lastError->isEmpty()
+                                         ? QStringLiteral("Не удалось распознать текст")
+                                         : *lastError);
+            }
+            updateToolbar();
+            return;
+        }
+        const QString language = remaining->takeFirst();
+        m_status->setText(QStringLiteral("Распознавание: %1…").arg(language));
+        m_context->translation->ocrRequestAsync(
+            image, providerId, language,
+            [this, language, best, bestScore, lastError, runNext](const QJsonObject& result) {
+                const QString error = result.value(QStringLiteral("error")).toString();
+                if (!error.isEmpty()) {
+                    *lastError = error;
+                } else {
+                    const QJsonArray lines = result.value(QStringLiteral("lines")).toArray();
+                    double weighted = 0.0;
+                    int chars = 0;
+                    for (const QJsonValue& value : lines) {
+                        const QJsonObject line = value.toObject();
+                        const QString text = line.value(QStringLiteral("text")).toString();
+                        if (text.isEmpty())
+                            continue;
+                        weighted += line.value(QStringLiteral("confidence")).toDouble() * text.size();
+                        chars += text.size();
+                    }
+                    const double score = chars > 0 ? weighted / chars : 0.0;
+                    if (score > *bestScore) {
+                        *bestScore = score;
+                        *best = result;
+                    }
+                }
+                (*runNext)();
+            });
+    };
+    (*runNext)();
 }
 
 void ScreenCaptureWindow::translateResult()

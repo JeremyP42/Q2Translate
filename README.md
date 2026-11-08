@@ -6,6 +6,8 @@
 
 Portable Windows translation workspace with 49 connectors, OCR, document translation, and offline dictionaries.
 
+**Documentation:** [Architecture](docs/ARCHITECTURE.md) · [Interface](docs/INTERFACE.md) · [Connectors](docs/CONNECTORS.md) · [Image translation quality](docs/IMAGE_TRANSLATION_QUALITY.md) · [Русская версия](README_rus.md)
+
 <p align="center">
   <img src="docs/gifs/main-window-en.gif" alt="Q2Translate main window demo" width="760">
 </p>
@@ -60,6 +62,8 @@ The engine is chosen per file group in **Settings → OCR** ("OCR for screenshot
 | PDF (text layer) | document translation | PDFium text extraction with a quality gate | translated PDF in the original layout |
 | PDF (scan) / DJVU | document translation | `ddjvu`/PDFium page renders, per-page straightening and recognition | translated PDF |
 | DJVU (text layer) | document translation | `djvutxt` extraction with a quality gate | translated `.txt` |
+
+For screenshot OCR the language list has **Auto**: when several OCR languages are configured, Tesseract reads the capture with each candidate and keeps the result with the highest confidence.
 
 The OCR stage itself: measure page skew on a downscaled copy and straighten the image (from ~3° of tilt the engine merges lines across bubbles, past 5° it reads nothing), then the default page segmentation keeps column order and table rows, and a wide-gap split keeps neighbouring speech bubbles apart. If a pass returns nothing readable, it retries once with single-block segmentation. PaddleOCR reads the whole page in one pass — its detector finds the lines itself.
 
@@ -162,7 +166,7 @@ An update is the same archive unpacked over the old folder: the executable and `
 
 Every release is built as two portable archives from the same sources and with the same version:
 
-| Build | Archive | Size (2.7.55) | What is inside |
+| Build | Archive | Size (2.7.57) | What is inside |
 |---|---|---:|---|
 | **Full** | `Q2TranslatePortable_full_v<version>.zip` | ~172 MB | Tesseract, PaddleOCR (ONNX Runtime + PP-OCRv5 models) and the Nuspell connector are bundled. All OCR engines and all spelling backends work offline. |
 | **Small** | `Q2TranslatePortable_small_v<version>.zip` | ~47 MB | The Tesseract, PaddleOCR and Nuspell connector directories, engines and models are removed. OCR defaults to the built-in Windows OCR; spell checking defaults to Hunspell. |

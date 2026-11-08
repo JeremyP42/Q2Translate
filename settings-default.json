@@ -247,7 +247,7 @@
   "Advanced": {
     "EnableSlowerListening": false,
     "LayoutIndicator": false,
-    "CopyAction": 0,
+    "CopyTranslationToClipboard": true,
     "EnableMouseModeOnCtrl": true,
     "RemoveLineBreaks": false,
     "ScreenCaptureMode": "auto",
