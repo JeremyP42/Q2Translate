@@ -1287,7 +1287,7 @@ void OptionsDialog::buildServices(QVBoxLayout* layout)
         for (const auto& option : options)
             combo->addItem(option.first, option.second);
         providersGrid->addWidget(combo, row, column);
-        // The provider names are long; a wider list keeps "PaddleOCR (ONNX, локальный)"
+        // The provider names are long; a wider list keeps "PaddleOCR (локальный)"
         // and the hybrid entry readable.
         combo->setMinimumWidth(240);
         if (QAbstractItemView* view = combo->view())
@@ -1369,10 +1369,7 @@ void OptionsDialog::buildServices(QVBoxLayout* layout)
     providersGrid->addWidget(imageOptionsHost, 10, 0, 1, 5);
 
     // OCR engine per file type: empty means "same as the general OCR field".
-    QList<QPair<QString, QVariant>> ocrTypeOptions;
-    ocrTypeOptions.append(qMakePair(QStringLiteral("Как в общем поле"), QString()));
-    for (const auto& option : ocrOptions)
-        ocrTypeOptions.append(option);
+    QList<QPair<QString, QVariant>> ocrTypeOptions = ocrOptions;
     // The image row also offers the hybrid mode: Paddle detection plus Tesseract
     // re-reading of the places where Paddle found no text.
     QList<QPair<QString, QVariant>> imageOcrOptions = ocrTypeOptions;
@@ -1418,8 +1415,17 @@ void OptionsDialog::buildServices(QVBoxLayout* layout)
                                    const QList<QPair<QString, QVariant>>& engines,
                                    const QString& translatorKey) {
         providersGrid->addWidget(new QLabel(label, providersHost), row, 0);
-        if (QComboBox* ocrCombo = addProviderCombo(row, 1, ocrKey, engines))
+        if (QComboBox* ocrCombo = addProviderCombo(row, 1, ocrKey, engines)) {
             ocrCombo->setMinimumWidth(210);
+            if (m_context && m_context->settings
+                && m_context->settings->stringValue(ocrKey).isEmpty()) {
+                const QString fallback = ocrKey == QStringLiteral("Ocr.ProviderImages")
+                    ? QStringLiteral("paddleocr") : QStringLiteral("tesseract_local");
+                const int index = ocrCombo->findData(fallback);
+                if (index >= 0)
+                    ocrCombo->setCurrentIndex(index);
+            }
+        }
         providersGrid->addWidget(new QLabel(QStringLiteral("Коннектор"), providersHost), row, 2);
         if (QComboBox* translatorCombo =
                 addProviderCombo(row, 3, translatorKey, translatorOptions))
@@ -1557,8 +1563,8 @@ void OptionsDialog::buildBehavior(QVBoxLayout* layout)
     createGroup(layout, QStringLiteral("Перевод"), &group);
     addCheck(group, QStringLiteral("General.InstantTranslation"),
              QStringLiteral("Мгновенный перевод (по мере ввода)"));
-    addCheck(group, QStringLiteral("Advanced.RemoveLineBreaks"),
-             QStringLiteral("Удалять переносы строк из текста"));
+    addCheck(group, QStringLiteral("Advanced.CleanInsertedText"),
+             QStringLiteral("Очищать вставляемый текст (из буфера и OCR)"));
     addCheck(group, QStringLiteral("General.SpellChecking"),
              QStringLiteral("Проверка орфографии при вводе"));
 
@@ -1978,9 +1984,10 @@ void OptionsDialog::buildHotkeys(QVBoxLayout* layout)
 
     QVBoxLayout* group = nullptr;
     createGroup(layout, QStringLiteral("Глобальные горячие клавиши"), &group);
-    addCheck(group, QStringLiteral("HotKeys.EnableHotKeys"),
+    auto hotkeyColumns = addTwoColumns(group);
+    addCheck(hotkeyColumns.first, QStringLiteral("HotKeys.EnableHotKeys"),
              QStringLiteral("Включить глобальные горячие клавиши"));
-    addCheck(group, QStringLiteral("HotKeys.DoubleCtrlShowMain"),
+    addCheck(hotkeyColumns.second, QStringLiteral("HotKeys.DoubleCtrlShowMain"),
              QStringLiteral("Двойной Ctrl переводит выделенный текст"));
 
     createGroup(layout, QStringLiteral("Профиль клавиш"), &group);
@@ -3117,12 +3124,12 @@ void OptionsDialog::buildAdvanced(QVBoxLayout* layout)
 
     QVBoxLayout* group = nullptr;
     createGroup(layout, QStringLiteral("Поведение"), &group);
-    addCheck(group, QStringLiteral("Advanced.EnableMouseModeOnCtrl"),
+    auto behaviorColumns = addTwoColumns(group);
+    addCheck(behaviorColumns.first, QStringLiteral("Advanced.EnableMouseModeOnCtrl"),
              QStringLiteral("Mouse mode только по нажатому Ctrl"));
-    addCheck(group, QStringLiteral("Advanced.CopyTranslationToClipboard"),
-             QStringLiteral("Копировать перевод в буфер обмена"),
-             QStringLiteral("Автоматически копировать результат перевода, включая OCR со скриншота. "
-                            "По умолчанию включено."));
+    addCheck(behaviorColumns.second,
+             QStringLiteral("Advanced.CopyTranslationToClipboard"),
+             QStringLiteral("Автоматически копировать перевод в буфер обмена"));
 
     createGroup(layout, QStringLiteral("Текст и звук"), &group);
     auto textSound = addTwoColumns(group);
@@ -3215,19 +3222,25 @@ void OptionsDialog::buildAdvanced(QVBoxLayout* layout)
 
     balancerGroup->addWidget(balancerHost);
 
-    addCheck(balancerGroup, QStringLiteral("Balancer.AutoSwitch"),
-             QStringLiteral("Автоматически переключаться на следующий коннектор при ошибке"));
-    addCheck(balancerGroup, QStringLiteral("Balancer.ReturnToPrimary"),
-             QStringLiteral("Возвращаться на исходный коннектор"));
-    auto* timingRow = new QWidget(this);
-    auto* timingLayout = new QHBoxLayout(timingRow);
-    timingLayout->setContentsMargins(0, 0, 0, 0);
-    timingLayout->setSpacing(16);
-    const auto addTiming = [this, timingRow, timingLayout](const QString& label,
-                                                           const QString& key,
-                                                           int minimum, int maximum,
-                                                           const QString& suffix) {
-        auto* host = new QWidget(timingRow);
+    auto* balancerSwitches = new QWidget(this);
+    auto* switchesGrid = new QGridLayout(balancerSwitches);
+    switchesGrid->setContentsMargins(0, 0, 0, 0);
+    switchesGrid->setHorizontalSpacing(16);
+    switchesGrid->setVerticalSpacing(8);
+    switchesGrid->setColumnStretch(0, 1);
+    switchesGrid->setColumnStretch(1, 1);
+
+    auto* autoSwitch = new QCheckBox(
+        QStringLiteral("Автоматически переключаться на следующий коннектор при ошибке"),
+        balancerSwitches);
+    m_fields.append({autoSwitch, QStringLiteral("Balancer.AutoSwitch"), 0, 1});
+    connect(autoSwitch, &QCheckBox::toggled, this, &OptionsDialog::updateDependencies);
+    switchesGrid->addWidget(autoSwitch, 0, 0);
+
+    const auto addTiming = [this](QWidget* parent, const QString& label,
+                                  const QString& key, int minimum, int maximum,
+                                  const QString& suffix) {
+        auto* host = new QWidget(parent);
         auto* row = new QHBoxLayout(host);
         row->setContentsMargins(0, 0, 0, 0);
         row->setSpacing(8);
@@ -3238,14 +3251,26 @@ void OptionsDialog::buildAdvanced(QVBoxLayout* layout)
         spin->setMinimumWidth(90);
         row->addWidget(caption, 0, Qt::AlignVCenter);
         row->addWidget(spin);
-        timingLayout->addWidget(host, 1);
         m_fields.append({spin, key, 2, 1});
+        return host;
     };
-    addTiming(QStringLiteral("Вернуться через"), QStringLiteral("Balancer.ReturnAfterMinutes"),
-              1, 1440, QStringLiteral(" мин"));
-    addTiming(QStringLiteral("Общий таймаут коннектора"),
-              QStringLiteral("Balancer.TimeoutSeconds"), 5, 300, QStringLiteral(" с"));
-    balancerGroup->addWidget(timingRow);
+
+    switchesGrid->addWidget(
+        addTiming(balancerSwitches, QStringLiteral("Общий таймаут коннектора"),
+                  QStringLiteral("Balancer.TimeoutSeconds"), 5, 300, QStringLiteral(" с")),
+        0, 1);
+
+    auto* returnSwitch = new QCheckBox(QStringLiteral("Возвращаться на исходный коннектор"),
+                                       balancerSwitches);
+    m_fields.append({returnSwitch, QStringLiteral("Balancer.ReturnToPrimary"), 0, 1});
+    connect(returnSwitch, &QCheckBox::toggled, this, &OptionsDialog::updateDependencies);
+    switchesGrid->addWidget(returnSwitch, 1, 0);
+    switchesGrid->addWidget(
+        addTiming(balancerSwitches, QStringLiteral("Вернуться через"),
+                  QStringLiteral("Balancer.ReturnAfterMinutes"), 1, 1440,
+                  QStringLiteral(" мин")),
+        1, 1);
+    balancerGroup->addWidget(balancerSwitches);
 
     layout->addStretch(1);
 }
@@ -3472,6 +3497,22 @@ void OptionsDialog::loadAll()
             m_context->settings->boolValue(QStringLiteral("General.MinimizeToTrayOnClose"), true)
                 ? QStringLiteral("tray") : QStringLiteral("exit"));
     }
+    // OCR engines per file type: there is no shared "general OCR" field any
+    // more, so seed the intended defaults for profiles that still have an
+    // empty value.
+    if (m_context && m_context->settings) {
+        const QList<QPair<QString, QString>> ocrDefaults = {
+            {QStringLiteral("Ocr.ProviderScreen"), QStringLiteral("tesseract_local")},
+            {QStringLiteral("Ocr.ProviderImages"), QStringLiteral("paddleocr")},
+            {QStringLiteral("Ocr.ProviderPdf"), QStringLiteral("tesseract_local")},
+            {QStringLiteral("Ocr.ProviderDjvu"), QStringLiteral("tesseract_local")}
+        };
+        for (const auto& entry : ocrDefaults) {
+            if (m_context->settings->stringValue(entry.first).isEmpty())
+                m_context->settings->setValue(entry.first, entry.second);
+        }
+    }
+
     // Seeded defaults for the service switches. Dictionary, summarizer and
     // rewriter are off; spell checking is on.
     if (m_context && m_context->settings) {

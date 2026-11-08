@@ -249,7 +249,7 @@
     "LayoutIndicator": false,
     "CopyTranslationToClipboard": true,
     "EnableMouseModeOnCtrl": true,
-    "RemoveLineBreaks": false,
+    "CleanInsertedText": false,
     "ScreenCaptureMode": "auto",
     "ScreenCaptureAction": "translate"
   },

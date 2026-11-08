@@ -16,6 +16,7 @@ The main window is the primary translation workspace.
 | Source editor | Type, paste, drop a file, or use the microphone button. Spell checking follows the selected source language. |
 | Language bar | Source and target language selectors, swap button, and the main **Translate** button. |
 | Target editor | Translation result. The copy button copies the whole result; the result can be edited and searched. |
+| Broom | Flattens the source text: joins lines with spaces, collapses repeated spaces and empty lines. OCR keeps the recognized line structure until the broom is pressed. |
 | Service chips | Bottom row of enabled connectors. Click one service to translate with it; `Ctrl+click` selects several services and opens result tabs. When the chips do not fit, the row scrolls horizontally; the **Balancer** chip stays pinned to the right edge. |
 | Status bar | Connection/service state and current action hints. |
 
@@ -74,7 +75,7 @@ The **Behavior** page contains the spell-checking checkbox. The **Services** pag
 - **Nuspell** uses the same dictionary format and bundles English and Russian dictionaries in `services/spelling/nuspell/dictionaries/`; it adds compound handling and better suggestions. It is present in the full build only; the small build defaults to Hunspell.
 - **Windows Spell Checker** lists languages installed in Windows. They are managed by the system and cannot be downloaded or removed from the application.
 - If no dictionary is installed for the current source language, no words are underlined.
-- The source-language selector drives the dictionary; `Auto` detects Cyrillic, Latin, Greek, Hebrew, and Arabic scripts.
+- The dictionary follows the language automatically detected from the source text: Cyrillic text uses the Russian dictionary, Latin text uses English, regardless of whether the source selector is set to `Auto` or another language.
 
 Right-click a word underlined in red to open the correction menu. The **Suggestions** section at the top lists replacements from the active connector; choosing one replaces the word. Standard cut/copy/paste actions follow below.
 
@@ -142,7 +143,7 @@ The connector settings dialog is opened from **Settings → Connectors → card*
 
 ![OCR languages](images/ocr-languages.png)
 
-The OCR engine is chosen per file group - screenshots, images, PDF, DJVU - in the same settings page; the general OCR connector is used when a group is left empty. The OCR language manager downloads and removes Tesseract language data. For screenshot capture the language dropdown has **Auto**: with several configured OCR languages, Tesseract runs each candidate and keeps the highest-confidence result.
+The OCR engine and translation connector are chosen per file group - screenshots, images, PDF, DJVU - with no "same as general" option. Defaults: screenshots, PDF and DJVU use Tesseract; images use PaddleOCR, with hybrid Paddle+Tesseract available for images. The OCR language manager downloads and removes Tesseract language data. For screenshot capture the language dropdown has **Auto**: with several configured OCR languages, Tesseract runs each candidate and keeps the highest-confidence result.
 
 | Control | Purpose |
 |---|---|
@@ -155,7 +156,7 @@ Installed language files live under `services/ocr/tesseract/tessdata`.
 
 ## OCR region capture
 
-The OCR capture overlay appears after the OCR hotkey (`Win+Shift+Q` by default) or the OCR action. Drag a rectangle around the text; the overlay dims the rest of the screen. The captured image is sent to the selected OCR provider (Windows OCR, Tesseract, PaddleOCR, hybrid, or a vision LLM), then the recognized text can be inserted into the editor or translated immediately.
+The OCR capture overlay appears after the OCR hotkey (`Win+Shift+Q` by default) or the OCR action. Drag a rectangle around the text; the overlay dims the rest of the screen. The captured image is sent to the selected OCR provider (Windows OCR, Tesseract, PaddleOCR, hybrid, or a vision LLM), then the recognized text can be inserted into the editor or translated immediately. The recognized line breaks are preserved so lists and table rows stay readable; use the broom button in the main window to flatten the text.
 
 Tesseract first measures the page skew on a downscaled copy and straightens the image before recognition. Upright captures measure at zero and skip the rotation; a tilt of a few degrees is corrected because the engine otherwise merges text lines across columns, and past five degrees it stops reading the page at all. Recognition then runs the default page segmentation, which keeps column order and table rows. If a pass still returns no readable text, the provider retries once with single-block segmentation; that recovers a page but may interleave columns, so it stays a last resort.
 

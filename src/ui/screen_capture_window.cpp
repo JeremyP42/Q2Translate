@@ -27,6 +27,8 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QScreen>
+#include <QShowEvent>
+#include <QWindow>
 #include <QStandardPaths>
 #include <QTimer>
 #include <QToolButton>
@@ -192,12 +194,10 @@ void ScreenCaptureWindow::handleOcrResult(const QJsonObject& result, bool showEr
     }
 
     const bool table = !markdown.isEmpty();
-    QString cleaned = table ? markdown : text;
-    if (!table && m_context && m_context->settings
-        && m_context->settings->boolValue(QStringLiteral("Advanced.RemoveLineBreaks"), false)) {
-        cleaned.replace(QLatin1Char('\n'), QLatin1Char(' '));
-        cleaned = cleaned.simplified();
-    }
+    // Keep the recognized line structure. The main window decides whether the
+    // inserted OCR text should be flattened (Advanced.CleanInsertedText) and
+    // the broom button flattens already inserted text.
+    const QString cleaned = table ? markdown : text;
     m_resultText = cleaned;
     m_status->setText(table
                           ? QStringLiteral("Распознана таблица: %1 строк")
@@ -245,20 +245,36 @@ void ScreenCaptureWindow::start()
     // A normal window covering the screen is more reliable than showFullScreen:
     // it avoids the fullscreen transition that can swallow the first drag.
     show();
-    raise();
-    activateWindow();
-    setFocus();
+    const auto forceActive = [this] {
 #ifdef Q_OS_WIN
-    HWND windowHandle = reinterpret_cast<HWND>(winId());
-    ShowWindow(windowHandle, SW_SHOW);
-    SetForegroundWindow(windowHandle);
-    SetActiveWindow(windowHandle);
+        HWND nativeHandle = reinterpret_cast<HWND>(winId());
+        HWND foreground = GetForegroundWindow();
+        const DWORD foregroundThread = foreground
+            ? GetWindowThreadProcessId(foreground, nullptr) : 0;
+        const DWORD currentThread = GetCurrentThreadId();
+        bool attached = false;
+        if (foregroundThread && foregroundThread != currentThread)
+            attached = AttachThreadInput(currentThread, foregroundThread, TRUE) != FALSE;
+        ShowWindow(nativeHandle, SW_SHOW);
+        SetWindowPos(nativeHandle, HWND_TOPMOST, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        SetForegroundWindow(nativeHandle);
+        SetActiveWindow(nativeHandle);
+        SetFocus(nativeHandle);
+        if (attached)
+            AttachThreadInput(currentThread, foregroundThread, FALSE);
 #endif
-    QTimer::singleShot(0, this, [this] {
+        if (QWindow* window = windowHandle())
+            window->requestActivate();
         raise();
         activateWindow();
         setFocus();
-    });
+        QApplication::setActiveWindow(this);
+    };
+    forceActive();
+    QTimer::singleShot(30, this, forceActive);
+    QTimer::singleShot(150, this, forceActive);
+    QTimer::singleShot(500, this, forceActive);
     updateToolbar();
     updateStatus();
     update();
@@ -302,6 +318,32 @@ void ScreenCaptureWindow::resizeEvent(QResizeEvent* event)
         m_toolbar->move((width() - m_toolbar->width()) / 2, 12);
         m_toolbar->raise();
     }
+}
+
+void ScreenCaptureWindow::showEvent(QShowEvent* event)
+{
+    QWidget::showEvent(event);
+    QTimer::singleShot(0, this, [this] {
+        raise();
+        activateWindow();
+        setFocus();
+    });
+}
+
+bool ScreenCaptureWindow::nativeEvent(const QByteArray& eventType, void* message,
+                                      qintptr* result)
+{
+#ifdef Q_OS_WIN
+    if (eventType == "windows_generic_MSG" || eventType == "windows_dispatcher_MSG") {
+        auto* msg = static_cast<MSG*>(message);
+        if (msg && msg->message == WM_MOUSEACTIVATE) {
+            if (result)
+                *result = MA_ACTIVATE;
+            return true;
+        }
+    }
+#endif
+    return QWidget::nativeEvent(eventType, message, result);
 }
 
 void ScreenCaptureWindow::mousePressEvent(QMouseEvent* event)

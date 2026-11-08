@@ -38,6 +38,7 @@
 #include <QMimeData>
 #include <QApplication>
 #include <QButtonGroup>
+#include <functional>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QResizeEvent>
@@ -110,6 +111,39 @@
 #endif
 
 namespace {
+
+QString flattenedSourceText(const QString& input)
+{
+    QString text = input;
+    text.replace(QStringLiteral("\r\n"), QStringLiteral("\n"));
+    text.replace(QLatin1Char('\r'), QLatin1Char('\n'));
+    text.replace(QLatin1Char('\n'), QLatin1Char(' '));
+    return text.simplified();
+}
+
+class SourceTextEdit : public QTextEdit
+{
+public:
+    explicit SourceTextEdit(QWidget* parent = nullptr) : QTextEdit(parent) {}
+
+    std::function<QString(const QString&)> transformText;
+
+protected:
+    void insertFromMimeData(const QMimeData* source) override
+    {
+        if (source && source->hasText() && transformText) {
+            const QString text = source->text();
+            const QString cleaned = transformText(text);
+            if (cleaned != text) {
+                QMimeData data;
+                data.setText(cleaned);
+                QTextEdit::insertFromMimeData(&data);
+                return;
+            }
+        }
+        QTextEdit::insertFromMimeData(source);
+    }
+};
 
 QColor mutedUiColor()
 {
@@ -436,9 +470,14 @@ void MainWindow::buildUi()
     connect(m_serviceTooltipTimer, &QTimer::timeout, this, &MainWindow::showServiceTooltip);
     connect(m_sourceEdit, &QTextEdit::textChanged, this, &MainWindow::onInstantTextChanged);
 
+    if (auto* sourceEdit = static_cast<SourceTextEdit*>(m_sourceEdit)) {
+        sourceEdit->transformText = [this](const QString& text) {
+            return cleanInsertedText(text);
+        };
+    }
     m_spellHighlighter = new SpellCheckHighlighter(
         m_sourceEdit->document(), m_context ? m_context->plugins : nullptr, m_settings);
-    m_spellHighlighter->setLanguage(sourceLanguageCode());
+    updateSpellCheckLanguage();
     m_spellHighlighter->setEnabled(
         m_settings && m_settings->boolValue(QStringLiteral("General.SpellChecking"), true)
             && m_settings->boolValue(QStringLiteral("ServiceProviders.spellOn"), true));
@@ -446,8 +485,7 @@ void MainWindow::buildUi()
     connect(m_sourceEdit, &QTextEdit::customContextMenuRequested,
             this, &MainWindow::showSourceContextMenu);
     connect(m_fromCombo, &QComboBox::currentIndexChanged, this, [this] {
-        if (m_spellHighlighter)
-            m_spellHighlighter->setLanguage(sourceLanguageCode());
+        updateSpellCheckLanguage();
     });
 }
 
@@ -550,7 +588,7 @@ QWidget* MainWindow::buildSourceRow()
     paneLayout->setContentsMargins(0, 0, 0, 0);
     paneLayout->setSpacing(0);
 
-    m_sourceEdit = new QTextEdit(pane);
+    m_sourceEdit = new SourceTextEdit(pane);
     m_sourceEdit->setObjectName(QStringLiteral("SourceEdit"));
     m_sourceEdit->setAcceptRichText(false);
     m_sourceEdit->setMinimumHeight(22);
@@ -649,6 +687,18 @@ QWidget* MainWindow::buildLanguageBar()
     m_clearButton->setFocusPolicy(Qt::NoFocus);
     connect(m_clearButton, &QToolButton::clicked, this, &MainWindow::onClearAll);
     layout->addWidget(m_clearButton);
+
+    m_cleanButton = new QToolButton(bar);
+    m_cleanButton->setObjectName(QStringLiteral("BarButton"));
+    m_cleanButton->setIcon(IconFactory::icon(IconFactory::Glyph::Broom,
+                                            mutedUiColor(), 15));
+    m_cleanButton->setIconSize(QSize(16, 16));
+    m_cleanButton->setFixedSize(30, 30);
+    m_cleanButton->setCursor(Qt::PointingHandCursor);
+    m_cleanButton->setFocusPolicy(Qt::NoFocus);
+    m_cleanButton->setToolTip(QStringLiteral("Убрать переносы строк и лишние пробелы"));
+    connect(m_cleanButton, &QToolButton::clicked, this, &MainWindow::cleanSourceText);
+    layout->addWidget(m_cleanButton);
 
     m_fromCombo = new LanguageCombo(bar);
     layout->addWidget(m_fromCombo);
@@ -821,6 +871,8 @@ void MainWindow::updateCompactMode()
     const bool compactBar = width() < 560;
     if (m_clearButton)
         m_clearButton->setVisible(!narrow);
+    if (m_cleanButton)
+        m_cleanButton->setVisible(!narrow);
     if (m_swapButton)
         m_swapButton->setVisible(true);
     const int comboWidth = width() < 380 ? 100
@@ -2329,6 +2381,26 @@ void MainWindow::onSwapLanguages()
     clearResults();
 }
 
+QString MainWindow::cleanInsertedText(const QString& text) const
+{
+    if (!m_settings
+        || !m_settings->boolValue(QStringLiteral("Advanced.CleanInsertedText"), false)
+        || text.contains(QStringLiteral("⟦")))
+        return text;
+    return flattenedSourceText(text);
+}
+
+void MainWindow::cleanSourceText()
+{
+    if (!m_sourceEdit)
+        return;
+    const QString text = flattenedSourceText(m_sourceEdit->toPlainText());
+    if (text.isEmpty())
+        return;
+    setSourceText(text);
+    setStatusText(QStringLiteral("Переносы строк убраны"));
+}
+
 void MainWindow::onClearAll()
 {
     if (m_instantTimer)
@@ -2378,8 +2450,35 @@ void MainWindow::showMainMenu()
     m_mainMenu->exec(m_gearButton->mapToGlobal(QPoint(0, m_gearButton->height() + 4)));
 }
 
+void MainWindow::updateSpellCheckLanguage()
+{
+    if (!m_spellHighlighter)
+        return;
+    QString language = sourceLanguageCode();
+    if (language.isEmpty() || language == QStringLiteral("auto"))
+        language = QStringLiteral("en");
+    if (m_sourceEdit) {
+        const QString text = m_sourceEdit->toPlainText();
+        int letters = 0;
+        for (const QChar character : text) {
+            if (character.isLetter()) {
+                ++letters;
+                if (letters >= 3)
+                    break;
+            }
+        }
+        if (letters >= 3) {
+            const QString detected = LanguageRouter::detectLanguage(text);
+            if (!detected.isEmpty() && detected != QStringLiteral("auto"))
+                language = detected;
+        }
+    }
+    m_spellHighlighter->setLanguage(language);
+}
+
 void MainWindow::onInstantTextChanged()
 {
+    updateSpellCheckLanguage();
     // Direction follows the script of the typed text even when instant
     // translation is off.
     if (m_sourceEdit)
@@ -2562,7 +2661,7 @@ void MainWindow::startVoiceInput()
 void MainWindow::onTextRecognized(const QString& text, bool translate)
 {
     showMainWindow();
-    setSourceText(text);
+    setSourceText(cleanInsertedText(text));
     if (translate)
         onTranslate();
 }
@@ -3154,7 +3253,7 @@ void MainWindow::onSettingsApplied()
         m_spellHighlighter->setEnabled(
             m_settings->boolValue(QStringLiteral("General.SpellChecking"), true)
             && m_settings->boolValue(QStringLiteral("ServiceProviders.spellOn"), true));
-        m_spellHighlighter->setLanguage(sourceLanguageCode());
+        updateSpellCheckLanguage();
         m_spellHighlighter->clearCache();
     }
     if (m_instantAction)
@@ -3484,7 +3583,7 @@ void MainWindow::dropEvent(QDropEvent* event)
             m_sourceEdit->clear();
             m_targetEdit->clear();
         }
-        setSourceText(mime->text());
+        setSourceText(cleanInsertedText(mime->text()));
         event->acceptProposedAction();
         setStatusText(QStringLiteral("Текст вставлен из drag-and-drop"));
     }

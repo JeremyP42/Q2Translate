@@ -106,6 +106,8 @@ private slots:
     void onTranslate();
     void onSwapLanguages();
     void onClearAll();
+    void cleanSourceText();
+    QString cleanInsertedText(const QString& text) const;
     void onToggleMaximize();
     void onPinToggled(bool checked);
     void onCopySource();
@@ -126,6 +128,7 @@ private slots:
     void onHistoryActivated(const QJsonObject& entry);
     void onTextRecognized(const QString& text, bool translate);
     void onInstantTextChanged();
+    void updateSpellCheckLanguage();
     void setInterfacePreset(const QString& preset);
 
 private:
@@ -186,6 +189,7 @@ private:
     QComboBox* m_fromCombo = nullptr;
     QComboBox* m_toCombo = nullptr;
     QToolButton* m_clearButton = nullptr;
+    QToolButton* m_cleanButton = nullptr;
     QLabel* m_titleLabel = nullptr;
     QHBoxLayout* m_languageBarLayout = nullptr;
     QSpacerItem* m_languageBarSpacer = nullptr;

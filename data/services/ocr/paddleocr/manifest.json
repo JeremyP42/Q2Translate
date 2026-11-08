@@ -1,6 +1,6 @@
 {
   "id": "paddleocr",
-  "name": "PaddleOCR (ONNX, локальный)",
+  "name": "PaddleOCR (локальный)",
   "version": "1.0.0",
   "type": "ocr",
   "engine": "native",

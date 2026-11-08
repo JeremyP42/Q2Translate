@@ -18,6 +18,7 @@ enum class Glyph {
     Copy,
     Swap,
     Trash,
+    Broom,
     Globe,
     Speaker,
     Microphone,

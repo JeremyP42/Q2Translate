@@ -190,6 +190,19 @@ QPixmap renderGlyph(IconFactory::Glyph glyph, const QColor& color, int size, qre
         painter.drawLine(QPointF(14, 10.5), QPointF(14, 16.5));
         break;
     }
+    case IconFactory::Glyph::Broom: {
+        painter.drawLine(QPointF(18.5, 3.5), QPointF(12.0, 9.0));
+        QPainterPath head;
+        head.moveTo(11.0, 8.2);
+        head.lineTo(16.5, 13.7);
+        head.lineTo(9.0, 20.0);
+        head.lineTo(3.5, 14.5);
+        head.closeSubpath();
+        painter.drawPath(head);
+        painter.drawLine(QPointF(6.0, 12.0), QPointF(11.5, 17.5));
+        painter.drawLine(QPointF(8.2, 10.0), QPointF(13.7, 15.5));
+        break;
+    }
     case IconFactory::Glyph::Globe:
         painter.drawEllipse(QPointF(12, 12), 8.5, 8.5);
         painter.drawLine(QPointF(3.5, 12), QPointF(20.5, 12));

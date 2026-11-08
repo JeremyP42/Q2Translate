@@ -228,6 +228,17 @@ The small build does not ship Tesseract or PaddleOCR: it removes `services/ocr/t
 - `image_deskew` measures page skew by projection-profile variance on a downscaled copy and rotates the page back before recognition; the default page segmentation then keeps column order and table rows.
 - `bubble_detector` grows a balloon from the recognized lines (`BubbleFinder`) and returns its mask plus a per-row width profile; `text_typesetter` fits the translation to that profile and `image_overlay` erases the original and draws the lines centred in their own row spans; all of it is used by `ImageTranslationPipeline`.
 
+### Screen-capture overlay activation (do not change)
+
+The OCR overlay is a frameless top-most window opened from a hotkey while the main window may be hidden in the tray. It must force itself to the foreground before the first mouse event:
+
+- handle `WM_MOUSEACTIVATE` with `MA_ACTIVATE`;
+- call `QWindow::requestActivate()`, `raise()`, `activateWindow()`, `setFocus()`;
+- on Windows use `AttachThreadInput` + `SetForegroundWindow` / `SetActiveWindow` / `SetFocus`;
+- repeat activation after 0, 30, 150 and 500 ms.
+
+Without these steps Windows swallows the first drag and toolbar clicks while activating the window. Do not replace the normal `show()` with `showFullScreen()` and do not remove the native activation code or the retries. After any change, verify the first run by opening OCR from the global hotkey and immediately selecting an area and clicking a toolbar button.
+
 ### Recognition pipeline (PaddleOCR profile, complex pages)
 
 1. **Deskew.** The projection profile of a downscaled copy (700 px wide) is scanned from −10° to +10° in 1° steps and refined at 0.25°; the page is rotated back on a white canvas. From ~3° of tilt the engine merges text lines across columns, and past 5° it returns nothing, so the correction is applied before recognition. Screen captures measure at 0° and skip the rotation.

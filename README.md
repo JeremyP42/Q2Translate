@@ -44,7 +44,7 @@ Portable Windows translation workspace with 49 connectors, OCR, document transla
 - **Translation**: 17 online services, parallel requests to several connectors with one result tab per service, back translation, instant translation while typing, and mouse mode — hold `Ctrl` and select text with the mouse in any application.
 - **Dictionaries**: 11 online dictionaries plus local XDXF files with exact-match search.
 - **OCR**: capture a screen region (`Win+Shift+Q`), paste or drop images, and translate whole pages of images in place. Engines: Windows OCR, local Tesseract and PaddleOCR (ONNX) in the full build, or a vision LLM - one per file type (screen, images, PDF, DJVU).
-- **Spelling**: Hunspell, Nuspell, or Windows Spell Checking with downloadable dictionaries and correction suggestions.
+- **Spelling**: Hunspell, Nuspell, or Windows Spell Checking with downloadable dictionaries and correction suggestions. The dictionary follows the automatically detected language of the source text (Russian for Cyrillic, English for Latin).
 - **Speech**: text-to-speech for the source and the translation, voice input in the source editor through Windows speech recognition.
 - **Documents**: layout-preserving translation of DOCX, PPTX, PDF (text layer and scans), DJVU, EPUB, FB2, XLIFF, subtitles, and 15+ other formats, plus a batch window for whole folders.
 - **LLM**: 10 ready connectors for OpenAI, Claude, Gemini, DeepSeek, Qwen, Ollama, and more — translation, summarization, paraphrasing, dictionary articles, and OCR from an image; prompts are plain editable JSON (`prompts.json`).
@@ -63,7 +63,7 @@ The engine is chosen per file group in **Settings → OCR** ("OCR for screenshot
 | PDF (scan) / DJVU | document translation | `ddjvu`/PDFium page renders, per-page straightening and recognition | translated PDF |
 | DJVU (text layer) | document translation | `djvutxt` extraction with a quality gate | translated `.txt` |
 
-For screenshot OCR the language list has **Auto**: when several OCR languages are configured, Tesseract reads the capture with each candidate and keeps the result with the highest confidence.
+For screenshot OCR the recognized line structure is preserved (lists stay lists); the broom button in the main window flattens already inserted text, and the Behavior option can flatten text inserted from the clipboard or OCR. The language list has **Auto**: when several OCR languages are configured, Tesseract reads the capture with each candidate and keeps the result with the highest confidence.
 
 The OCR stage itself: measure page skew on a downscaled copy and straighten the image (from ~3° of tilt the engine merges lines across bubbles, past 5° it reads nothing), then the default page segmentation keeps column order and table rows, and a wide-gap split keeps neighbouring speech bubbles apart. If a pass returns nothing readable, it retries once with single-block segmentation. PaddleOCR reads the whole page in one pass — its detector finds the lines itself.
 
@@ -166,7 +166,7 @@ An update is the same archive unpacked over the old folder: the executable and `
 
 Every release is built as two portable archives from the same sources and with the same version:
 
-| Build | Archive | Size (2.7.57) | What is inside |
+| Build | Archive | Size (2.8.1) | What is inside |
 |---|---|---:|---|
 | **Full** | `Q2TranslatePortable_full_v<version>.zip` | ~172 MB | Tesseract, PaddleOCR (ONNX Runtime + PP-OCRv5 models) and the Nuspell connector are bundled. All OCR engines and all spelling backends work offline. |
 | **Small** | `Q2TranslatePortable_small_v<version>.zip` | ~47 MB | The Tesseract, PaddleOCR and Nuspell connector directories, engines and models are removed. OCR defaults to the built-in Windows OCR; spell checking defaults to Hunspell. |
