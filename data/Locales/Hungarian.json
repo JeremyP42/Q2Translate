@@ -1,5 +1,9 @@
 {
   "Language": "Magyar",
+  "Undo": "Visszavonás",
+  "Redo": "Újra",
+  "Cut": "Kivágás",
+  "Paste": "Beillesztés",
   "+Add": "+ Hozzáadás",
   "<p>History is empty.</p>": "<p>Az előzmények üresek.</p>",
   "<p>Nothing found.</p>": "<p>Nincs találat.</p>",

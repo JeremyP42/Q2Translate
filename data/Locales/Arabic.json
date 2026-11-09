@@ -1,5 +1,9 @@
 {
   "Language": "العربية",
+  "Undo": "تراجع",
+  "Redo": "إعادة",
+  "Cut": "قص",
+  "Paste": "لصق",
   "+Add": "+ إضافة",
   "<p>History is empty.</p>": "<p>السجل فارغ.</p>",
   "<p>Nothing found.</p>": "<p>لا توجد نتائج.</p>",

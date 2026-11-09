@@ -73,6 +73,7 @@ public slots:
     void translateCurrent();
     void speakSelection();
     void replaceSelectionWithTranslation();
+
     void switchTargetLanguage();
     void focusSource();
     void focusTarget();
@@ -107,6 +108,7 @@ private slots:
     void onSwapLanguages();
     void onClearAll();
     void cleanSourceText();
+    bool hasDictionaryConnector() const;
     QString cleanInsertedText(const QString& text) const;
     void onToggleMaximize();
     void onPinToggled(bool checked);
@@ -260,6 +262,7 @@ private:
     bool m_waitingForRequest = false;
     bool m_additionalCallDone = false;
     bool m_quitRequested = false;
+    bool m_replaceSelectionAfterTranslation = false;
     int m_historyIndex = -1;
     bool m_historyNavigating = false;
     bool m_sideLayout = false;

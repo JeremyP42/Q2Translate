@@ -137,6 +137,7 @@ void XdxfProvider::executeAsync(const QString& capability, const QJsonObject& pa
     }
     const QString word = params.value(QStringLiteral("word")).toString(
         params.value(QStringLiteral("text")).toString()).trimmed();
+    const bool exact = params.value(QStringLiteral("exact")).toBool();
     if (word.isEmpty()) {
         callback(errorResult(Localization::tr(QStringLiteral("XDXF: пустой запрос."))));
         return;
@@ -148,14 +149,14 @@ void XdxfProvider::executeAsync(const QString& capability, const QJsonObject& pa
         return;
     }
 
-    auto future = QtConcurrent::run([files, word] {
+    auto future = QtConcurrent::run([files, word, exact] {
         QVector<DictionaryEntry> entries;
         for (const QString& path : files) {
             XdxfDictionary dictionary(path);
             QString error;
             if (!dictionary.open(&error))
                 continue;
-            entries += dictionary.search(word, false);
+            entries += dictionary.search(word, exact);
         }
         return entries;
     });

@@ -83,19 +83,18 @@ Right-click a word underlined in red to open the correction menu. The **Suggesti
 
 ![Dictionary](images/dictionary.png)
 
-The dictionary window searches local and online dictionaries.
+The dictionary window lists every enabled dictionary connector; checked connectors get their own result tab above the page.
 
 | Control | Purpose |
 |---|---|
 | Search field | Headword or phrase. `Enter` starts the search. |
 | **Find** | Runs the search across selected dictionaries. |
-| Exact match | Restricts results to exact headwords. |
-| Language selectors | Source and target languages for online dictionaries. |
-| Scale | Zooms the result view. |
-| History | Recently searched words. |
-| Local XDXF | Adds or removes individual `.xdxf` files; the Local XDXF connector scans a selected folder and its subdirectories. |
-| Online dictionaries | Enables or disables dictionary connectors for this window. |
-| Result pane | Formatted definitions, translations, examples, and links. |
+| Exact match | Restricts results to exact headwords. Passed to dictionary connectors; the local XDXF connector enforces it. |
+| Search languages | All favourite languages; the checked ones are queried, with no source→target direction. |
+| History | Recently searched words; moved to the first row. |
+| Dictionary list | Enabled dictionary connectors. Check the ones to search; each checked connector opens a tab above the result area. |
+| Result tabs | One tab per checked dictionary, plus an empty-state tab when nothing is selected. |
+| Result pane | Formatted definitions, translations, examples, and links in the active dictionary tab. |
 | Bottom actions | Open the word in the main window, copy, add to favorites, delete, close. |
 
 ## History
@@ -131,7 +130,7 @@ The popup translates the current selection or clipboard text without opening the
 | Speak | Reads the translation with Windows SAPI. |
 | Open in main window | Opens the full editor with the same text and translates it again. |
 
-Behavior (position, timeout, transparency, auto-focus) is configured in **Settings → Popups**. The popup can be raised by the quick-translation hotkey (`Ctrl+Q` by default).
+Behavior (position, timeout, transparency, auto-focus) is configured in **Settings → Popups**. The popup can be raised by the quick-translation hotkey (assigned to `Ctrl+Q` in the User template; unassigned in the standard template).
 
 ## Plugin / connector settings
 

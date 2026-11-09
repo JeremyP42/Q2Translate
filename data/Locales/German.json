@@ -1,5 +1,9 @@
 {
   "Language": "Deutsch",
+  "Undo": "Rückgängig",
+  "Redo": "Wiederholen",
+  "Cut": "Ausschneiden",
+  "Paste": "Einfügen",
   "+Add": "+ Hinzufügen",
   "<p>History is empty.</p>": "<p>Verlauf ist leer.</p>",
   "<p>Nothing found.</p>": "<p>Nichts gefunden.</p>",

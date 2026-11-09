@@ -1,5 +1,9 @@
 {
   "Language": "English",
+  "Undo": "Undo",
+  "Redo": "Redo",
+  "Cut": "Cut",
+  "Paste": "Paste",
   "+Add": "+Add",
   "<p>History is empty.</p>": "<p>History is empty.</p>",
   "<p>Nothing found.</p>": "<p>Nothing found.</p>",

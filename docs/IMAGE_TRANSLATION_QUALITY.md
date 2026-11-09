@@ -44,7 +44,7 @@ accurately.
 
 | Mode | When it is used |
 |---|---|
-| PaddleOCR (ONNX, local) | images, screenshots, pages with artwork; confident line detection |
+| PaddleOCR (local) | images, screenshots, pages with artwork; confident line detection |
 | Tesseract (local) | documents, scans, text on a uniform background |
 | Hybrid | Paddle finds the page, Tesseract re-reads areas without lines |
 | Windows OCR | system engine without installing components |

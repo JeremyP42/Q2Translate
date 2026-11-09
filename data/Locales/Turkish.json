@@ -1,5 +1,9 @@
 {
   "Language": "Türkçe",
+  "Undo": "Geri al",
+  "Redo": "Yinele",
+  "Cut": "Kes",
+  "Paste": "Yapıştır",
   "+Add": "+ Ekle",
   "<p>History is empty.</p>": "<p>Geçmiş boş.</p>",
   "<p>Nothing found.</p>": "<p>Hiçbir şey bulunamadı.</p>",

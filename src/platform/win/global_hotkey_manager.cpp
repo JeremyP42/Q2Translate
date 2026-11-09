@@ -1,6 +1,7 @@
 #include "global_hotkey_manager.h"
 
 #include "core/settings_manager.h"
+#include "core/hotkey_utils.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -154,6 +155,7 @@ void GlobalHotkeyManager::registerHotkeys()
         {"translate_document", "HotKeyTranslateDocument", 0}
     };
     m_nextId = 1;
+    m_registrationErrors.clear();
     for (const HotkeyDefinition& definition : definitions) {
         const int value = m_settings->intValue(
             QStringLiteral("HotKeys.") + QString::fromLatin1(definition.key),
@@ -170,8 +172,16 @@ void GlobalHotkeyManager::registerHotkeys()
         if (RegisterHotKey(nullptr, id, modifiers, virtualKey)) {
             m_idToAction.insert(id, QString::fromLatin1(definition.action));
         } else {
+            const DWORD error = GetLastError();
+            const QString combo = HotkeyUtils::nativeToSequence(value).toString(QKeySequence::NativeText);
+            m_registrationErrors.append(
+                QStringLiteral("%1 — %2: Windows error %3. Сочетание уже занято "
+                               "другой программой или зарезервировано системой; "
+                               "выберите другое.")
+                    .arg(QString::fromLatin1(definition.key), combo)
+                    .arg(error));
             qWarning() << "[hotkeys] RegisterHotKey failed for" << definition.action
-                       << "error" << GetLastError();
+                       << "error" << error;
         }
     }
 #endif

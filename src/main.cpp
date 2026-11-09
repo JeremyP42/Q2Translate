@@ -571,37 +571,69 @@ void migrateHotkeyProfile(SettingsManager& settings)
             settings.setValue(QStringLiteral("HotKeys.") + key, 0);
             settings.setValue(QStringLiteral("HotKeys.Internal.") + key, 0);
         }
-        settings.setValue(QStringLiteral("HotKeys.HotKeyQuickTranslate"), 593);
+        settings.setValue(QStringLiteral("HotKeys.HotKeyQuickTranslate"), 0);
+        settings.setValue(QStringLiteral("HotKeys.HotKeyReplaceSelection"), 1617);
         settings.setValue(QStringLiteral("HotKeys.HotKeyTextRecognition"), 3153);
         settings.setValue(QStringLiteral("HotKeys.Internal.HotKeyTextRecognition"), 3153);
         settings.setValue(QStringLiteral("HotKeys.Preset"), QStringLiteral("default"));
     };
 
-    const int revision = settings.value(QStringLiteral("HotKeys.ProfileRevision")).toInt(0);
-    if (revision >= 2)
+    int revision = settings.value(QStringLiteral("HotKeys.ProfileRevision")).toInt(0);
+    if (revision >= 5)
         return;
 
-    if (revision < 1) {
-        // Fresh profiles start with only quick translate and OCR.
-        applyMinimal();
-        settings.setValue(QStringLiteral("HotKeys.ProfileRevision"), 1);
-    }
-
-    bool legacyMatch = true;
-    for (const DefaultHotkey& entry : legacy) {
-        const QString key = QString::fromLatin1(entry.key);
-        if (settings.intValue(QStringLiteral("HotKeys.") + key, entry.global) != entry.global
-            || settings.intValue(QStringLiteral("HotKeys.Internal.") + key, entry.internal)
-                != entry.internal) {
-            legacyMatch = false;
-            break;
+    if (revision < 2) {
+        if (revision < 1) {
+            // Fresh profiles start with only quick translate and OCR.
+            applyMinimal();
+            settings.setValue(QStringLiteral("HotKeys.ProfileRevision"), 1);
         }
-    }
-    if (legacyMatch)
-        applyMinimal();
 
-    settings.setValue(QStringLiteral("HotKeys.ProfileRevision"), 2);
-    settings.save();
+        bool legacyMatch = true;
+        for (const DefaultHotkey& entry : legacy) {
+            const QString key = QString::fromLatin1(entry.key);
+            if (settings.intValue(QStringLiteral("HotKeys.") + key, entry.global) != entry.global
+                || settings.intValue(QStringLiteral("HotKeys.Internal.") + key, entry.internal)
+                    != entry.internal) {
+                legacyMatch = false;
+                break;
+            }
+        }
+        if (legacyMatch)
+            applyMinimal();
+
+        settings.setValue(QStringLiteral("HotKeys.ProfileRevision"), 2);
+        revision = 2;
+    }
+
+    if (revision < 3) {
+        // Shift+Q is the default replacement hotkey. Only seed it when the
+        // user has not assigned another key; a custom binding is preserved.
+        if (settings.intValue(QStringLiteral("HotKeys.HotKeyReplaceSelection"), 0) == 0)
+            settings.setValue(QStringLiteral("HotKeys.HotKeyReplaceSelection"), 1105);
+        settings.setValue(QStringLiteral("HotKeys.ProfileRevision"), 3);
+        revision = 3;
+    }
+
+    if (revision < 4) {
+        // Ctrl+Q is the default replacement hotkey and belongs to the global
+        // scope only. The old quick-popup default moves out of the way.
+        if (settings.intValue(QStringLiteral("HotKeys.HotKeyQuickTranslate"), 0) == 593)
+            settings.setValue(QStringLiteral("HotKeys.HotKeyQuickTranslate"), 0);
+        const int replace = settings.intValue(QStringLiteral("HotKeys.HotKeyReplaceSelection"), 0);
+        if (replace == 0 || replace == 1105)
+            settings.setValue(QStringLiteral("HotKeys.HotKeyReplaceSelection"), 593);
+        settings.setValue(QStringLiteral("HotKeys.ProfileRevision"), 4);
+        revision = 4;
+    }
+
+    if (revision < 5) {
+        const int replace = settings.intValue(QStringLiteral("HotKeys.HotKeyReplaceSelection"), 0);
+        if (replace == 0 || replace == 593 || replace == 1105)
+            settings.setValue(QStringLiteral("HotKeys.HotKeyReplaceSelection"), 1617);
+        settings.setValue(QStringLiteral("HotKeys.ProfileRevision"), 5);
+        settings.save();
+    }
 }
 
 }
@@ -709,7 +741,7 @@ int main(int argc, char* argv[])
     Localization::load(settings.stringValue(QStringLiteral("General.LocaleFoderName"),
                                           QStringLiteral("Russian")));
     MainWindow window(&context);
-    TrayIcon tray(&settings);
+    TrayIcon tray(&settings, &plugins);
     tray.setHotkeysEnabled(settings.boolValue(QStringLiteral("HotKeys.EnableHotKeys"), true));
 
     QObject::connect(&tray, &TrayIcon::showMainWindowRequested, &window, &MainWindow::showMainWindow);
@@ -736,6 +768,8 @@ int main(int argc, char* argv[])
                   .arg(hotkeys.isEnabled())
                   .arg(hotkeys.isHookInstalled())
                   .arg(hotkeys.isMouseHookInstalled()));
+    for (const QString& error : hotkeys.registrationErrors())
+        hotkeyLog(QStringLiteral("registration failed: %1").arg(error));
 
     QObject::connect(&hotkeys, &GlobalHotkeyManager::doubleCtrlDetected, &window, [&] {
         hotkeyLog(QStringLiteral("doubleCtrl detected"));
@@ -782,7 +816,7 @@ int main(int argc, char* argv[])
         else if (action == QStringLiteral("ocr"))
             window.startOcr();
         else if (action == QStringLiteral("replace_selection"))
-            window.translateSelectionInMain();
+            window.replaceSelectionWithTranslation();
         else if (action == QStringLiteral("switch_target_language"))
             window.switchTargetLanguage();
         else if (action == QStringLiteral("dictionary"))

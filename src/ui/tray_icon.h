@@ -7,13 +7,15 @@ class QAction;
 class QMenu;
 class QSystemTrayIcon;
 class SettingsManager;
+class PluginManager;
 
 class TrayIcon : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit TrayIcon(SettingsManager* settings, QObject* parent = nullptr);
+    explicit TrayIcon(SettingsManager* settings, PluginManager* plugins = nullptr,
+                      QObject* parent = nullptr);
     ~TrayIcon() override;
 
     void show();
@@ -37,6 +39,7 @@ private:
     void updateServiceVisibility();
 
     SettingsManager* m_settings = nullptr;
+    PluginManager* m_plugins = nullptr;
     QSystemTrayIcon* m_tray = nullptr;
     QMenu* m_menu = nullptr;
     QAction* m_hotkeysAction = nullptr;

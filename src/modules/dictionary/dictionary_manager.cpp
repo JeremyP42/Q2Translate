@@ -112,7 +112,8 @@ void DictionaryManager::searchLocalAsync(const QString& word, bool exactMatch,
 
 void DictionaryManager::searchOnline(const QString& word, const QString& from, const QString& to,
                                      const QStringList& providerIds,
-                                     std::function<void(const QString&, const QJsonObject&)> callback)
+                                     std::function<void(const QString&, const QJsonObject&)> callback,
+                                     bool exact)
 {
     if (!m_plugins || providerIds.isEmpty())
         return;
@@ -122,6 +123,7 @@ void DictionaryManager::searchOnline(const QString& word, const QString& from, c
     params.insert(QStringLiteral("text"), word);
     params.insert(QStringLiteral("from"), from);
     params.insert(QStringLiteral("to"), to);
+    params.insert(QStringLiteral("exact"), exact);
 
     for (IPluginProvider* provider : m_plugins->providersFor(QStringLiteral("dictionary"))) {
         if (!providerIds.contains(provider->id()))

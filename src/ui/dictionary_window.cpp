@@ -28,6 +28,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QTextBrowser>
+#include <QTabWidget>
 #include <QTextCursor>
 #include <QVBoxLayout>
 
@@ -60,52 +61,12 @@ void DictionaryWindow::buildUi()
 
     m_exact = new QCheckBox(QStringLiteral("Точное совпадение"), this);
     searchRow->addWidget(m_exact);
-
-    searchRow->addWidget(new QLabel(QStringLiteral("Масштаб"), this));
-    m_zoom = new QSlider(Qt::Horizontal, this);
-    m_zoom->setRange(80, 140);
-    m_zoom->setValue(100);
-    m_zoom->setFixedWidth(90);
-    searchRow->addWidget(m_zoom);
-    root->addLayout(searchRow);
-
-    auto* languageRow = new QHBoxLayout;
-    m_fromCombo = new DownComboBox(this);
-    m_toCombo = new DownComboBox(this);
-    const QList<LanguageInfo> languages =
-        favoriteLanguageList(m_context ? m_context->settings : nullptr, false);
-    for (const LanguageInfo& language : languages) {
-        const QString code = QString::fromLatin1(language.code);
-        const QString name = QString::fromUtf8(language.name);
-        m_fromCombo->addItem(name, code);
-        m_toCombo->addItem(name, code);
-    }
-    if (m_context && m_context->settings) {
-        const QString from = normalizeLanguageCode(
-            m_context->settings->stringValue(QStringLiteral("General.LanguageFrom"),
-                                             QStringLiteral("en")));
-        const QString to = normalizeLanguageCode(
-            m_context->settings->stringValue(QStringLiteral("General.LanguageTo"),
-                                             QStringLiteral("ru")));
-        if (m_fromCombo->findData(from) < 0)
-            m_fromCombo->addItem(languageNameByCode(from), from);
-        if (m_toCombo->findData(to) < 0)
-            m_toCombo->addItem(languageNameByCode(to), to);
-        if (const int index = m_fromCombo->findData(from); index >= 0)
-            m_fromCombo->setCurrentIndex(index);
-        if (const int index = m_toCombo->findData(to); index >= 0)
-            m_toCombo->setCurrentIndex(index);
-    }
-    auto* swap = new QPushButton(QStringLiteral("⇄"), this);
-    languageRow->addWidget(m_fromCombo);
-    languageRow->addWidget(swap);
-    languageRow->addWidget(m_toCombo);
-    languageRow->addStretch(1);
-    languageRow->addWidget(new QLabel(QStringLiteral("История:"), this));
+    searchRow->addStretch(1);
+    searchRow->addWidget(new QLabel(QStringLiteral("История:"), this));
     m_historyCombo = new DownComboBox(this);
-    m_historyCombo->setMinimumWidth(160);
-    languageRow->addWidget(m_historyCombo);
-    root->addLayout(languageRow);
+    m_historyCombo->setMinimumWidth(180);
+    searchRow->addWidget(m_historyCombo);
+    root->addLayout(searchRow);
 
     auto* body = new QHBoxLayout;
     body->setSpacing(12);
@@ -116,36 +77,45 @@ void DictionaryWindow::buildUi()
     sideLayout->setContentsMargins(0, 0, 0, 0);
     sideLayout->setSpacing(8);
 
-    auto* localGroup = new QGroupBox(QStringLiteral("Локальные XDXF"), side);
-    auto* localLayout = new QVBoxLayout(localGroup);
-    m_localCombo = new DownComboBox(localGroup);
-    localLayout->addWidget(m_localCombo);
-    auto* localButtons = new QHBoxLayout;
-    auto* addDictionary = new QPushButton(QStringLiteral("Добавить…"), localGroup);
-    auto* removeDictionary = new QPushButton(QStringLiteral("Удалить"), localGroup);
-    localButtons->addWidget(addDictionary);
-    localButtons->addWidget(removeDictionary);
-    localLayout->addLayout(localButtons);
-    sideLayout->addWidget(localGroup);
+    auto* languagesGroup = new QGroupBox(QStringLiteral("Языки поиска"), side);
+    auto* languagesLayout = new QVBoxLayout(languagesGroup);
+    m_languageList = new QListWidget(languagesGroup);
+    const QList<LanguageInfo> languages =
+        favoriteLanguageList(m_context ? m_context->settings : nullptr, false);
+    const QString source = m_context && m_context->settings
+        ? normalizeLanguageCode(m_context->settings->stringValue(
+              QStringLiteral("General.LanguageFrom"), QStringLiteral("en")))
+        : QStringLiteral("en");
+    const QString target = m_context && m_context->settings
+        ? normalizeLanguageCode(m_context->settings->stringValue(
+              QStringLiteral("General.LanguageTo"), QStringLiteral("ru")))
+        : QStringLiteral("ru");
+    for (const LanguageInfo& language : languages) {
+        const QString code = QString::fromLatin1(language.code);
+        auto* item = new QListWidgetItem(QString::fromUtf8(language.name), m_languageList);
+        item->setData(Qt::UserRole, code);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState((code == source || code == target) ? Qt::Checked : Qt::Unchecked);
+    }
+    languagesLayout->addWidget(m_languageList, 1);
+    sideLayout->addWidget(languagesGroup, 1);
 
-    auto* onlineGroup = new QGroupBox(QStringLiteral("Онлайн-словари"), side);
-    auto* onlineLayout = new QVBoxLayout(onlineGroup);
-    m_onlineList = new QListWidget(onlineGroup);
-    onlineLayout->addWidget(m_onlineList);
-    sideLayout->addWidget(onlineGroup, 1);
+    auto* dictionariesGroup = new QGroupBox(QStringLiteral("Словари"), side);
+    auto* dictionariesLayout = new QVBoxLayout(dictionariesGroup);
+    m_onlineList = new QListWidget(dictionariesGroup);
+    dictionariesLayout->addWidget(m_onlineList, 1);
+
+    sideLayout->addWidget(dictionariesGroup, 1);
 
     body->addWidget(side, 0);
 
     auto* right = new QWidget(this);
     auto* rightLayout = new QVBoxLayout(right);
     rightLayout->setContentsMargins(0, 0, 0, 0);
-    m_results = new QTextBrowser(right);
-    m_results->setObjectName(QStringLiteral("DictionaryResults"));
-    m_results->setOpenExternalLinks(true);
-    m_results->setHtml(QStringLiteral(
-        "<div style='padding:28px;text-align:center'>"
-        "Введите слово и нажмите «Найти».</div>"));
-    rightLayout->addWidget(m_results, 1);
+    m_tabs = new QTabWidget(right);
+    m_tabs->setObjectName(QStringLiteral("DictionaryTabs"));
+    m_tabs->setDocumentMode(true);
+    rightLayout->addWidget(m_tabs, 1);
     m_status = new QLabel(QStringLiteral("Готово"), right);
     m_status->setObjectName(QStringLiteral("MiniNote"));
     rightLayout->addWidget(m_status);
@@ -167,32 +137,8 @@ void DictionaryWindow::buildUi()
         m_query->setText(m_historyCombo->itemText(index));
         performSearch();
     });
-    connect(swap, &QPushButton::clicked, this, [this] {
-        const int from = m_fromCombo->currentIndex();
-        const int to = m_toCombo->currentIndex();
-        m_fromCombo->setCurrentIndex(to);
-        m_toCombo->setCurrentIndex(from);
-    });
-    connect(m_zoom, &QSlider::valueChanged, this, &DictionaryWindow::updateZoom);
-    connect(addDictionary, &QPushButton::clicked, this, [this] {
-        const QString path = QFileDialog::getOpenFileName(
-            this, QStringLiteral("Добавить XDXF-словарь"), QString(),
-            QStringLiteral("XDXF (*.xdxf);;Все файлы (*.*)"));
-        if (path.isEmpty())
-            return;
-        if (m_context && m_context->dictionary) {
-            m_context->dictionary->addLocalDictionary(path);
-            refreshDictionaries();
-        }
-    });
-    connect(removeDictionary, &QPushButton::clicked, this, [this] {
-        if (!m_context || !m_context->dictionary)
-            return;
-        const QString path = m_localCombo->currentData().toString();
-        if (path.isEmpty())
-            return;
-        m_context->dictionary->removeLocalDictionary(path);
-        refreshDictionaries();
+    connect(m_onlineList, &QListWidget::itemChanged, this, [this](QListWidgetItem*) {
+        rebuildTabs();
     });
 }
 
@@ -201,30 +147,62 @@ void DictionaryWindow::refreshDictionaries()
     if (!m_context || !m_context->dictionary)
         return;
 
-    m_localCombo->clear();
-    const QStringList paths = m_context->dictionary->localPaths();
-    for (const QString& path : paths)
-        m_localCombo->addItem(QFileInfo(path).fileName(), path);
-    if (paths.isEmpty())
-        m_localCombo->addItem(QStringLiteral("Нет словарей"), QString());
-
+    const bool blocked = m_onlineList->blockSignals(true);
     m_onlineList->clear();
-    const bool dictOn = !m_context->settings
-        || m_context->settings->boolValue(QStringLiteral("ServiceProviders.dictOn"), true);
     const QString preferred = m_context->settings
         ? m_context->settings->stringValue(QStringLiteral("ServiceProviders.dict")) : QString();
-    for (const PluginManifest& manifest : m_context->dictionary->onlineDictionaries()) {
+    const QList<PluginManifest> dictionaries = m_context->dictionary->onlineDictionaries();
+    for (const PluginManifest& manifest : dictionaries) {
         auto* item = new QListWidgetItem(manifest.name, m_onlineList);
         item->setData(Qt::UserRole, manifest.id);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        if (!dictOn) {
-            item->setFlags(item->flags() & ~Qt::ItemFlags(Qt::ItemIsEnabled));
-            item->setCheckState(Qt::Unchecked);
-        } else {
-            item->setCheckState(preferred.isEmpty() || preferred == manifest.id
-                                    ? Qt::Checked : Qt::Unchecked);
-        }
+        item->setCheckState(preferred.isEmpty() || preferred == manifest.id
+                                ? Qt::Checked : Qt::Unchecked);
     }
+    m_onlineList->blockSignals(blocked);
+
+    rebuildTabs();
+}
+
+void DictionaryWindow::rebuildTabs()
+{
+    if (!m_tabs)
+        return;
+    m_tabs->clear();
+    m_tabBrowsers.clear();
+    m_tabHtml.clear();
+    m_tabTitles.clear();
+
+    for (int index = 0; index < m_onlineList->count(); ++index) {
+        QListWidgetItem* item = m_onlineList->item(index);
+        if (!item || item->checkState() != Qt::Checked)
+            continue;
+        const QString id = item->data(Qt::UserRole).toString();
+        ensureTab(id, item->text());
+    }
+
+    if (m_tabs->count() == 0) {
+        auto* empty = new QTextBrowser(m_tabs);
+        empty->setHtml(QStringLiteral(
+            "<div style='padding:28px;text-align:center'>"
+            "Отметьте хотя бы один словарь в списке слева.</div>"));
+        m_tabBrowsers.insert(QStringLiteral("__empty__"), empty);
+        m_tabs->addTab(empty, QStringLiteral("Словари"));
+    }
+}
+
+QTextBrowser* DictionaryWindow::ensureTab(const QString& id, const QString& title)
+{
+    if (QTextBrowser* existing = m_tabBrowsers.value(id))
+        return existing;
+    auto* browser = new QTextBrowser(m_tabs);
+    browser->setObjectName(QStringLiteral("DictionaryResults"));
+    browser->setOpenExternalLinks(true);
+    m_tabBrowsers.insert(id, browser);
+    m_tabTitles.insert(id, title);
+    m_tabHtml.insert(id, QString());
+    m_tabs->addTab(browser, title);
+    return browser;
 }
 
 void DictionaryWindow::refreshHistory()
@@ -252,6 +230,22 @@ void DictionaryWindow::performSearch()
 
     m_context->dictionary->addHistory(word);
     refreshHistory();
+    rebuildTabs();
+
+    QStringList ids;
+    QHash<QString, QString> nameToId;
+    for (int index = 0; index < m_onlineList->count(); ++index) {
+        QListWidgetItem* item = m_onlineList->item(index);
+        if (!item || item->checkState() != Qt::Checked)
+            continue;
+        const QString id = item->data(Qt::UserRole).toString();
+        ids.append(id);
+        nameToId.insert(item->text(), id);
+    }
+    if (ids.isEmpty()) {
+        m_status->setText(QStringLiteral("Отметьте хотя бы один словарь"));
+        return;
+    }
 
     const QString pageText = ThemeManager::color(QStringLiteral("text")).name();
     const QString pageSurface = ThemeManager::color(QStringLiteral("surface")).name();
@@ -259,7 +253,7 @@ void DictionaryWindow::performSearch()
     const QString pageMuted = ThemeManager::color(QStringLiteral("muted")).name();
     const QString pageAccent = ThemeManager::color(QStringLiteral("accentText")).name();
     const QString pageDanger = ThemeManager::color(QStringLiteral("danger")).name();
-    m_resultHtml = QStringLiteral(
+    const QString header = QStringLiteral(
         "<html><head><style>"
         "body{font-family:'Segoe UI';font-size:14px;line-height:1.45;color:%1;background:%2;}"
         ".card{border:1px solid %3;border-radius:9px;margin:10px 8px;padding:12px 15px;background:%2;}"
@@ -270,55 +264,47 @@ void DictionaryWindow::performSearch()
         ".dict-defs{margin:5px 0 9px 20px;padding:0;}"
         "</style></head><body>")
         .arg(pageText, pageSurface, pageBorder, pageAccent, pageMuted, pageDanger);
-    m_results->setHtml(m_resultHtml);
-    m_pending = 1;
+
+    for (const QString& id : std::as_const(ids)) {
+        m_tabHtml[id] = header;
+        if (QTextBrowser* browser = ensureTab(id, m_tabTitles.value(id)))
+            browser->setHtml(header);
+    }
+    m_pending = ids.size();
     m_gotResult = false;
     m_status->setText(QStringLiteral("Поиск…"));
 
-    const QString from = m_fromCombo->currentData().toString();
-    const QString to = m_toCombo->currentData().toString();
+    const auto finish = [this] {
+        if (m_pending > 0)
+            return;
+        m_status->setText(m_gotResult ? QStringLiteral("Готово")
+                                      : Localization::tr(QStringLiteral("Ничего не найдено")));
+    };
+
     QPointer<DictionaryWindow> self(this);
 
-    m_context->dictionary->searchLocalAsync(word, m_exact->isChecked(),
-        [self](const QVector<DictionaryEntry>& entries) {
-            DictionaryWindow* window = self.data();
-            if (!window)
-                return;
-            for (const DictionaryEntry& entry : entries) {
-                window->m_gotResult = true;
-                window->appendCard(entry.word, entry.dictionaryName, entry.definitionHtml);
-            }
-            if (--window->m_pending == 0) {
-                if (!window->m_gotResult) {
-                    window->appendCard(QStringLiteral("Локальный поиск"), QString(),
-                               Localization::tr(QStringLiteral("<p>Ничего не найдено.</p>")));
-                    if (window->m_status)
-                        window->m_status->setText(Localization::tr(QStringLiteral("Ничего не найдено")));
-                } else {
-                    if (window->m_status)
-                        window->m_status->setText(QStringLiteral("Готово"));
-                }
-            }
-        });
-
-    QStringList onlineIds;
-    for (int index = 0; index < m_onlineList->count(); ++index) {
-        QListWidgetItem* item = m_onlineList->item(index);
-        if (item->checkState() == Qt::Checked)
-            onlineIds.append(item->data(Qt::UserRole).toString());
+    QStringList searchLanguages;
+    for (int index = 0; index < m_languageList->count(); ++index) {
+        QListWidgetItem* item = m_languageList->item(index);
+        if (item && item->checkState() == Qt::Checked)
+            searchLanguages.append(item->data(Qt::UserRole).toString());
     }
-    if (onlineIds.isEmpty())
+    if (searchLanguages.isEmpty()) {
+        m_status->setText(QStringLiteral("Отметьте язык поиска"));
         return;
-
-    m_pending += onlineIds.size();
-    m_context->dictionary->searchOnline(word, from, to, onlineIds,
-        [self](const QString& service, const QJsonObject& result) {
+    }
+    m_pending = ids.size() * searchLanguages.size();
+    for (const QString& language : std::as_const(searchLanguages)) {
+        m_context->dictionary->searchOnline(word, language, language, ids,
+            [self, nameToId, finish](const QString& service, const QJsonObject& result) {
             DictionaryWindow* window = self.data();
             if (!window)
                 return;
+            const QString id = nameToId.value(service);
             const QString error = result.value(QStringLiteral("error")).toString();
             if (!error.isEmpty()) {
-                window->appendCard(service, error, QString(), true);
+                if (!id.isEmpty())
+                    window->appendCardToTab(id, service, error, QString(), true);
             } else {
                 window->m_gotResult = true;
                 QString html = result.value(QStringLiteral("html")).toString();
@@ -328,18 +314,26 @@ void DictionaryWindow::performSearch()
                                .arg(text.toHtmlEscaped().replace(QLatin1Char('\n'),
                                                                  QStringLiteral("<br>")));
                 }
-                window->appendCard(result.value(QStringLiteral("title")).toString(service),
-                           result.value(QStringLiteral("url")).toString(), html);
+                const QString title = result.value(QStringLiteral("title")).toString(service);
+                if (!id.isEmpty())
+                    window->appendCardToTab(id, title,
+                                            result.value(QStringLiteral("url")).toString(), html);
             }
-            if (--window->m_pending == 0 && window->m_status)
-                window->m_status->setText(window->m_gotResult ? QStringLiteral("Готово")
-                                              : Localization::tr(QStringLiteral("Ничего не найдено")));
-        });
+                --window->m_pending;
+                finish();
+            },
+            m_exact->isChecked());
+    }
 }
 
-void DictionaryWindow::appendCard(const QString& title, const QString& subtitle,
-                                  const QString& html, bool error)
+void DictionaryWindow::appendCardToTab(const QString& id, const QString& title,
+                                       const QString& subtitle, const QString& html,
+                                       bool error)
 {
+    QTextBrowser* browser = m_tabBrowsers.value(id);
+    if (!browser) {
+        browser = ensureTab(id, m_tabTitles.value(id, title));
+    }
     const QString card = QStringLiteral(
         "<div class='card'><h3>%1</h3>%2<div class='%4'>%3</div></div>")
         .arg(title.toHtmlEscaped(),
@@ -348,22 +342,22 @@ void DictionaryWindow::appendCard(const QString& title, const QString& subtitle,
                                       .arg(subtitle.toHtmlEscaped()),
              error ? QStringLiteral("<p>%1</p>").arg(html.toHtmlEscaped()) : html,
              error ? QStringLiteral("err") : QStringLiteral("definitions"));
-    m_resultHtml += card;
-    m_results->setHtml(m_resultHtml + QStringLiteral("</body></html>"));
-    QTextCursor cursor = m_results->textCursor();
+    m_tabHtml[id] += card;
+    browser->setHtml(m_tabHtml[id] + QStringLiteral("</body></html>"));
+    QTextCursor cursor = browser->textCursor();
     cursor.movePosition(QTextCursor::End);
-    m_results->setTextCursor(cursor);
+    browser->setTextCursor(cursor);
+    m_tabs->setCurrentWidget(browser);
 }
 
-void DictionaryWindow::updateZoom()
+void DictionaryWindow::appendCard(const QString& title, const QString& subtitle,
+                                  const QString& html, bool error)
 {
-    const int target = m_zoom->value();
-    if (target > m_lastZoom) {
-        for (int index = m_lastZoom; index < target; index += 10)
-            m_results->zoomIn(1);
-    } else if (target < m_lastZoom) {
-        for (int index = target; index < m_lastZoom; index += 10)
-            m_results->zoomOut(1);
-    }
-    m_lastZoom = target;
+    const QString id = m_tabs->currentIndex() >= 0
+        ? m_tabTitles.key(m_tabs->tabText(m_tabs->currentIndex()))
+        : QString();
+    if (!id.isEmpty())
+        appendCardToTab(id, title, subtitle, html, error);
 }
+
+

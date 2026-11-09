@@ -1,5 +1,9 @@
 {
   "Language": "Bahasa Indonesia",
+  "Undo": "Urungkan",
+  "Redo": "Ulangi",
+  "Cut": "Potong",
+  "Paste": "Tempel",
   "+Add": "+ Tambah",
   "<p>History is empty.</p>": "<p>Riwayat kosong.</p>",
   "<p>Nothing found.</p>": "<p>Tidak ada yang ditemukan.</p>",

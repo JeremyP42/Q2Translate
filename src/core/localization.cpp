@@ -128,6 +128,35 @@ void applyText(QObject* object, const QString& propertyName, const QString& curr
         setter(translated);
 }
 
+QString standardActionKey(const QString& text)
+{
+    QString base = text.section(QLatin1Char('\t'), 0, 0);
+    base.remove(QLatin1Char('&'));
+    if (base == QLatin1String("Undo")) return QStringLiteral("Undo");
+    if (base == QLatin1String("Redo")) return QStringLiteral("Redo");
+    if (base == QLatin1String("Cut")) return QStringLiteral("Cut");
+    if (base == QLatin1String("Copy")) return QStringLiteral("Copy");
+    if (base == QLatin1String("Paste")) return QStringLiteral("Paste");
+    if (base == QLatin1String("Delete")) return QStringLiteral("Delete");
+    if (base == QLatin1String("Select All")) return QStringLiteral("Select all");
+    return QString();
+}
+
+void translateStandardAction(QAction* action)
+{
+    if (!action)
+        return;
+    const QString current = action->text();
+    const int tab = current.indexOf(QLatin1Char('\t'));
+    const QString suffix = tab >= 0 ? current.mid(tab) : QString();
+    const QString key = standardActionKey(current);
+    if (key.isEmpty())
+        return;
+    const QString translated = translationFor(key) + suffix;
+    if (translated != current)
+        action->setText(translated);
+}
+
 void translateCombo(QComboBox* combo)
 {
     const int count = combo->count();
@@ -282,6 +311,11 @@ void translateObject(QObject* object)
             applyText(menu, QStringLiteral("title"), menu->title(),
                       [menu](const QString& value) { menu->setTitle(value); });
             for (QAction* action : menu->actions()) {
+                const QString key = standardActionKey(action->text());
+                if (!key.isEmpty()) {
+                    translateStandardAction(action);
+                    continue;
+                }
                 applyText(action, QStringLiteral("text"), action->text(),
                           [action](const QString& value) { action->setText(value); });
             }
@@ -289,8 +323,11 @@ void translateObject(QObject* object)
     }
 
     if (auto* action = qobject_cast<QAction*>(object)) {
-        applyText(action, QStringLiteral("text"), action->text(),
-                  [action](const QString& value) { action->setText(value); });
+        if (!standardActionKey(action->text()).isEmpty())
+            translateStandardAction(action);
+        else
+            applyText(action, QStringLiteral("text"), action->text(),
+                      [action](const QString& value) { action->setText(value); });
     }
 
     for (QObject* child : object->children())

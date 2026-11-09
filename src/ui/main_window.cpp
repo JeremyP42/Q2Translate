@@ -413,13 +413,7 @@ MainWindow::MainWindow(AppContext* context, QWidget* parent)
         connect(m_context->history, &HistoryManager::changed, this, &MainWindow::onHistoryChanged);
 }
 
-MainWindow::~MainWindow()
-{
-    if (m_settings) {
-        saveState();
-        m_settings->save();
-    }
-}
+MainWindow::~MainWindow() = default;
 
 void MainWindow::buildUi()
 {
@@ -1435,8 +1429,7 @@ void MainWindow::loadState()
         m_historyAction->setVisible(
             m_settings->boolValue(QStringLiteral("General.EnableHistory"), false));
     if (m_dictionaryAction)
-        m_dictionaryAction->setVisible(
-            m_settings->boolValue(QStringLiteral("ServiceProviders.dictOn"), false));
+        m_dictionaryAction->setVisible(hasDictionaryConnector());
     if (m_callGroup) {
         const bool summOn =
             m_settings->boolValue(QStringLiteral("ServiceProviders.summOn"), false);
@@ -2164,10 +2157,19 @@ void MainWindow::onTranslationFinished(const QString& requestId)
     }
 
     if (m_currentResultService.isEmpty()) {
+        m_replaceSelectionAfterTranslation = false;
         if (!m_resultTabs->count())
             m_targetEdit->setPlainText(QStringLiteral("Не удалось получить перевод."));
     } else {
         showResultForService(m_currentResultService);
+        if (m_replaceSelectionAfterTranslation) {
+            m_replaceSelectionAfterTranslation = false;
+            const QString translated = m_targetEdit->toPlainText().trimmed();
+            if (!translated.isEmpty() && m_context->clipboard) {
+                m_context->clipboard->pasteText(translated);
+                setStatusText(QStringLiteral("Перевод вставлен вместо выделения"));
+            }
+        }
         handleAdditionalOutput();
 
         if (!m_additionalCallDone && m_context && m_context->plugins && m_settings) {
@@ -2560,6 +2562,21 @@ void MainWindow::showHistory()
     dialog.exec();
 }
 
+bool MainWindow::hasDictionaryConnector() const
+{
+    if (!m_context || !m_context->plugins)
+        return false;
+    for (const PluginManifest& manifest : m_context->plugins->manifests()) {
+        if (!manifest.valid || !manifest.capabilities.contains(QStringLiteral("dictionary")))
+            continue;
+        if (m_context->plugins->isDisabled(manifest.id))
+            continue;
+        if (m_context->plugins->provider(manifest.id))
+            return true;
+    }
+    return false;
+}
+
 void MainWindow::showDictionary()
 {
     if (!m_context)
@@ -2681,6 +2698,25 @@ void MainWindow::showPopupText(const QString& text)
     if (text.trimmed().isEmpty())
         return;
 
+    const QString detected = LanguageRouter::detectLanguage(text);
+    LanguageRouter router(m_settings);
+    const QString from = detected.isEmpty() ? sourceLanguageCode() : detected;
+    const QString to = router.resolveTarget(from);
+    if (m_fromCombo) {
+        const int index = m_fromCombo->findData(from);
+        if (index >= 0) {
+            const QSignalBlocker blocker(m_fromCombo);
+            m_fromCombo->setCurrentIndex(index);
+        }
+    }
+    if (m_toCombo) {
+        const int index = m_toCombo->findData(to);
+        if (index >= 0) {
+            const QSignalBlocker blocker(m_toCombo);
+            m_toCombo->setCurrentIndex(index);
+        }
+    }
+
     if (!m_popup) {
         m_popup = new PopupWindow(m_context, this);
         connect(m_popup, &PopupWindow::openMainRequested, this, [this](const QString& value) {
@@ -2689,7 +2725,7 @@ void MainWindow::showPopupText(const QString& text)
             onTranslate();
         });
     }
-    m_popup->showTranslation(text, sourceLanguageCode(), targetLanguageCode());
+    m_popup->showTranslation(text, from, to);
 }
 
 void MainWindow::translateText(const QString& text)
@@ -2788,11 +2824,50 @@ void MainWindow::speakSelection()
 
 void MainWindow::replaceSelectionWithTranslation()
 {
-    const QString translation = m_targetEdit->toPlainText().trimmed();
-    if (translation.isEmpty() || !m_context || !m_context->clipboard)
+    if (!m_context || !m_context->clipboard || m_replaceSelectionAfterTranslation)
         return;
-    m_context->clipboard->pasteText(translation);
-    setStatusText(QStringLiteral("Перевод вставлен вместо выделения"));
+    m_replaceSelectionAfterTranslation = true;
+
+    // WM_HOTKEY arrives while the modifiers are still physically held. Sending
+    // Ctrl+C immediately can become Ctrl+Shift+C and copy nothing. Wait for the
+    // keyboard to become quiet, then use the same clipboard path as double Ctrl.
+    auto attempts = std::make_shared<int>(50); // up to ~2 s
+    auto tryCopy = std::make_shared<std::function<void()>>();
+    *tryCopy = [this, attempts, tryCopy] {
+        if (!m_context || !m_context->clipboard) {
+            m_replaceSelectionAfterTranslation = false;
+            return;
+        }
+#ifdef Q_OS_WIN
+        const bool modifiersHeld =
+            (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0
+            || (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0
+            || (GetAsyncKeyState(VK_MENU) & 0x8000) != 0
+            || (GetAsyncKeyState(VK_LWIN) & 0x8000) != 0
+            || (GetAsyncKeyState(VK_RWIN) & 0x8000) != 0;
+        if (modifiersHeld && --(*attempts) > 0) {
+            QTimer::singleShot(40, this, [tryCopy] { (*tryCopy)(); });
+            return;
+        }
+#endif
+        const QString text = m_context->clipboard->copySelection();
+        if (text.trimmed().isEmpty()) {
+            m_replaceSelectionAfterTranslation = false;
+            setStatusText(QStringLiteral("Не удалось получить выделенный текст"));
+            QMessageBox::warning(
+                nullptr, QStringLiteral("Перевести выделенное"),
+                QStringLiteral("Не удалось скопировать выделенный текст.\n\n"
+                               "Проверьте, что текст выделен и окно принимает Ctrl+C. "
+                               "Если целевое приложение запущено от имени администратора, "
+                               "запустите Q2Translate от администратора."));
+            return;
+        }
+        setSourceText(text);
+        applyAutomaticDirection(text);
+        onTranslate();
+        setStatusText(QStringLiteral("Перевод выделения…"));
+    };
+    (*tryCopy)();
 }
 
 void MainWindow::switchTargetLanguage()
@@ -3263,8 +3338,7 @@ void MainWindow::onSettingsApplied()
         m_historyAction->setVisible(
             m_settings->boolValue(QStringLiteral("General.EnableHistory"), false));
     if (m_dictionaryAction)
-        m_dictionaryAction->setVisible(
-            m_settings->boolValue(QStringLiteral("ServiceProviders.dictOn"), false));
+        m_dictionaryAction->setVisible(hasDictionaryConnector());
     if (m_callGroup) {
         const bool summOn =
             m_settings->boolValue(QStringLiteral("ServiceProviders.summOn"), false);
@@ -3591,14 +3665,6 @@ void MainWindow::dropEvent(QDropEvent* event)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    saveState();
-    if (m_settings)
-        m_settings->save();
-    if (m_context && m_context->history)
-        m_context->history->save();
-    if (m_context && m_context->exceptions)
-        m_context->exceptions->save();
-
     const bool closeToTray = m_settings
         ? (m_settings->stringValue(QStringLiteral("Layout.CloseAction"), QStringLiteral("tray"))
                != QStringLiteral("exit"))
@@ -3610,6 +3676,12 @@ void MainWindow::closeEvent(QCloseEvent* event)
         event->ignore();
         hide();
         emit hiddenToTray();
+        saveState();
+        m_settings->save();
+        if (m_context && m_context->history)
+            m_context->history->save();
+        if (m_context && m_context->exceptions)
+            m_context->exceptions->save();
         return;
     }
     QMainWindow::closeEvent(event);
@@ -3812,12 +3884,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 void MainWindow::requestQuit()
 {
     m_quitRequested = true;
-    saveState();
-    if (m_settings)
-        m_settings->save();
-    if (m_context && m_context->history)
-        m_context->history->save();
-    if (m_context && m_context->exceptions)
-        m_context->exceptions->save();
+    hide();
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     QCoreApplication::quit();
 }

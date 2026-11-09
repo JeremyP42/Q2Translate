@@ -1,5 +1,9 @@
 {
   "Language": "Tiếng Việt",
+  "Undo": "Hoàn tác",
+  "Redo": "Làm lại",
+  "Cut": "Cắt",
+  "Paste": "Dán",
   "+Add": "+ Thêm",
   "<p>History is empty.</p>": "<p>Lịch sử trống.</p>",
   "<p>Nothing found.</p>": "<p>Không tìm thấy gì.</p>",

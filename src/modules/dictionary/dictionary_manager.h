@@ -30,7 +30,8 @@ public:
                           std::function<void(const QVector<DictionaryEntry>&)> callback);
     void searchOnline(const QString& word, const QString& from, const QString& to,
                       const QStringList& providerIds,
-                      std::function<void(const QString&, const QJsonObject&)> callback);
+                      std::function<void(const QString&, const QJsonObject&)> callback,
+                      bool exact = false);
     QList<PluginManifest> onlineDictionaries() const;
 
     QStringList history() const { return m_history; }

@@ -155,8 +155,9 @@ HTTP runs through `QNetworkAccessManager`; connectors never access the filesyste
 
 ## Global input
 
-- Assigned hotkeys are registered with `RegisterHotKey`; defaults are `Ctrl+Q` (quick translation) and `Win+Shift+Q` (OCR).
-- A low-level `WH_KEYBOARD_LL` hook detects the double-`Ctrl` gesture that raises the main window; `HotKeys.Preset` offers `classic` and `modern` key sets.
+- Global hotkeys are registered with `RegisterHotKey`; the standard profile uses `Ctrl+Shift+Q` for replace-selection and `Win+Shift+Q` for OCR. The User template adds `Ctrl+Q` for the popup and also uses `Ctrl+Shift+Q` for replacement.
+- In-app and global bindings are independent scopes; duplicates are rejected only within one scope when settings are saved. A failed `RegisterHotKey` is reported to the user and written to `hotkeys.log`.
+- A low-level `WH_KEYBOARD_LL` hook detects the double-`Ctrl` gesture that raises the main window; `HotKeys.Preset` offers `classic`, `modern`, `default` and a separately stored `user` set (`HotKeys.UserInternal` / `HotKeys.UserGlobal`).
 - A low-level `WH_MOUSE_LL` hook implements mouse mode (`Advanced.EnableMouseModeOnCtrl`): hold `Ctrl` and select text with the mouse to translate it.
 - `ExceptionsManager` keeps applications and window classes where hotkeys and mouse mode stay inactive in `Data/Exceptions.json`; entries match a process name and an optional window class, case-insensitively, with separate disabled and enabled lists.
 

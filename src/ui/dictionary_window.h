@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDialog>
+#include <QHash>
 #include <QJsonObject>
 
 class AppContext;
@@ -10,7 +11,7 @@ class QLabel;
 class QLineEdit;
 class QListWidget;
 class QPushButton;
-class QSlider;
+class QTabWidget;
 class QTextBrowser;
 
 class DictionaryWindow : public QDialog
@@ -25,22 +26,24 @@ private:
     void refreshDictionaries();
     void refreshHistory();
     void performSearch();
+    void rebuildTabs();
+    QTextBrowser* ensureTab(const QString& id, const QString& title);
+    void appendCardToTab(const QString& id, const QString& title, const QString& subtitle,
+                         const QString& html, bool error = false);
     void appendCard(const QString& title, const QString& subtitle, const QString& html,
                     bool error = false);
-    void updateZoom();
 
     AppContext* m_context = nullptr;
     QLineEdit* m_query = nullptr;
-    QComboBox* m_fromCombo = nullptr;
-    QComboBox* m_toCombo = nullptr;
     QComboBox* m_historyCombo = nullptr;
-    QComboBox* m_localCombo = nullptr;
+    QListWidget* m_languageList = nullptr;
     QListWidget* m_onlineList = nullptr;
-    QTextBrowser* m_results = nullptr;
+    QTabWidget* m_tabs = nullptr;
+    QHash<QString, QTextBrowser*> m_tabBrowsers;
+    QHash<QString, QString> m_tabHtml;
+    QHash<QString, QString> m_tabTitles;
     QCheckBox* m_exact = nullptr;
-    QSlider* m_zoom = nullptr;
     QLabel* m_status = nullptr;
-    int m_lastZoom = 100;
     int m_pending = 0;
     bool m_gotResult = false;
     QString m_resultHtml;

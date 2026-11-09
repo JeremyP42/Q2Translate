@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QPoint>
 #include <QString>
+#include <QStringList>
 
 #ifdef Q_OS_WIN
 #ifndef NOMINMAX
@@ -27,6 +28,7 @@ public:
     bool isEnabled() const { return m_enabled; }
     bool isHookInstalled() const;
     bool isMouseHookInstalled() const;
+    QStringList registrationErrors() const { return m_registrationErrors; }
     void setEnabled(bool enabled);
 
 signals:
@@ -46,6 +48,7 @@ private:
 
     SettingsManager* m_settings = nullptr;
     QHash<int, QString> m_idToAction;
+    QStringList m_registrationErrors;
     int m_nextId = 1;
     bool m_enabled = true;
     bool m_ctrlHeld = false;

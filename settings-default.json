@@ -82,7 +82,7 @@
     "HotKeyKeyboard": 0,
     "HotKeyListenText": 0,
     "HotKeyCopyTranslation": 0,
-    "HotKeyReplaceSelection": 0,
+    "HotKeyReplaceSelection": 1617,
     "HotKeySwitchMouseMode": 0,
     "HotKeyTranslateClipboard": 0,
     "HotKeyTranslateClipboardInMainWindow": 0,
@@ -111,7 +111,7 @@
       "HotKeyTranslate": 0,
       "HotKeySwapLanguages": 0
     },
-    "HotKeyQuickTranslate": 593,
+    "HotKeyQuickTranslate": 0,
     "HotKeySwitchTargetLanguage": 0,
     "HotKeyTranslate": 0,
     "HotKeyFocusSource": 0,

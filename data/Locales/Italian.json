@@ -1,5 +1,9 @@
 {
   "Language": "Italiano",
+  "Undo": "Annulla",
+  "Redo": "Ripeti",
+  "Cut": "Taglia",
+  "Paste": "Incolla",
   "+Add": "+ Aggiungere",
   "<p>History is empty.</p>": "<p>La cronologia è vuota.</p>",
   "<p>Nothing found.</p>": "<p>Nessun risultato.</p>",

@@ -1,5 +1,9 @@
 {
   "Language": "繁體中文",
+  "Undo": "復原",
+  "Redo": "重做",
+  "Cut": "剪下",
+  "Paste": "貼上",
   "+Add": "+ 新增",
   "<p>History is empty.</p>": "<p>歷史記錄為空。</p>",
   "<p>Nothing found.</p>": "<p>找不到任何結果。</p>",

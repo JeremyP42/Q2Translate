@@ -182,12 +182,114 @@ struct HotkeyDefinition {
     int globalDefault;
 };
 
+class HotkeySequenceEdit : public QKeySequenceEdit
+{
+public:
+    explicit HotkeySequenceEdit(QWidget* parent = nullptr)
+        : QKeySequenceEdit(parent)
+    {
+        connect(this, &QKeySequenceEdit::keySequenceChanged, this,
+                [this](const QKeySequence& sequence) {
+            if (!m_partial)
+                m_lastCommitted = sequence;
+        });
+    }
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override
+    {
+        const int key = event->key();
+        const bool modifier = key == Qt::Key_Control || key == Qt::Key_Shift
+            || key == Qt::Key_Alt || key == Qt::Key_Meta;
+
+        if (modifier) {
+            // Show Ctrl / Ctrl+Shift immediately. The real sequence is not
+            // committed until a non-modifier key arrives.
+            m_partial = true;
+            showModifiers(event->modifiers());
+            event->accept();
+            return;
+        }
+
+        if (key == Qt::Key_Escape) {
+            cancelPartial();
+            event->accept();
+            return;
+        }
+
+        if ((key == Qt::Key_Backspace || key == Qt::Key_Delete)
+            && event->modifiers() == Qt::NoModifier) {
+            m_partial = false;
+            setKeySequence(QKeySequence());
+            m_lastCommitted = QKeySequence();
+            event->accept();
+            return;
+        }
+
+        const QKeySequence sequence(event->keyCombination());
+        if (!sequence.isEmpty()) {
+            m_partial = false;
+            m_lastCommitted = sequence;
+            setKeySequence(sequence);
+            event->accept();
+            return;
+        }
+
+        QKeySequenceEdit::keyPressEvent(event);
+    }
+
+    void keyReleaseEvent(QKeyEvent* event) override
+    {
+        if (m_partial) {
+            event->accept();
+            return;
+        }
+        QKeySequenceEdit::keyReleaseEvent(event);
+    }
+
+    void focusOutEvent(QFocusEvent* event) override
+    {
+        if (m_partial)
+            cancelPartial();
+        QKeySequenceEdit::focusOutEvent(event);
+    }
+
+private:
+    void showModifiers(Qt::KeyboardModifiers modifiers)
+    {
+        QStringList parts;
+        if (modifiers & Qt::ControlModifier)
+            parts.append(QStringLiteral("Ctrl"));
+        if (modifiers & Qt::ShiftModifier)
+            parts.append(QStringLiteral("Shift"));
+        if (modifiers & Qt::AltModifier)
+            parts.append(QStringLiteral("Alt"));
+        if (modifiers & Qt::MetaModifier)
+            parts.append(QStringLiteral("Win"));
+        if (auto* line = findChild<QLineEdit*>())
+            line->setText(parts.join(QLatin1Char('+')));
+    }
+
+    void cancelPartial()
+    {
+        m_partial = false;
+        if (auto* line = findChild<QLineEdit*>()) {
+            line->setText(m_lastCommitted.isEmpty()
+                              ? QString()
+                              : m_lastCommitted.toString(QKeySequence::NativeText));
+        }
+    }
+
+    bool m_partial = false;
+    QKeySequence m_lastCommitted;
+};
+
 const HotkeyDefinition kHotkeys[] = {
     {"HotKeyShowMainWindow", "Показать главное окно", 0, 0},
-    {"HotKeyQuickTranslate", "Быстрый перевод", 0, 593},
+    {"HotKeyQuickTranslate", "Перевод во всплывающем окне", 0, 0},
     {"HotKeyListenText", "Прослушать выделение", 0, 0},
     {"HotKeyTextRecognition", "OCR с экрана", 3153, 3153},
-    {"HotKeyReplaceSelection", "Заменить выделение переводом", 0, 0},
+    {"HotKeyReplaceSelection", "Перевести выделенное с заменой", 0, 1617},
     {"HotKeySwitchTargetLanguage", "Переключить целевой язык", 0, 0},
     {"HotKeyDictionary", "Показать словарь", 0, 0},
     {"HotKeyTranslate", "Перевести", 0, 0},
@@ -209,7 +311,7 @@ struct PresetHotkey {
 
 // (modifiers << 8) | virtualKey; MOD_CONTROL = 2, MOD_SHIFT = 4, MOD_ALT = 1.
 const PresetHotkey kClassicHotkeys[] = {
-    {"HotKeyQuickTranslate", 593},       // Ctrl+Q
+    {"HotKeyQuickTranslate", 0},         // unassigned
     {"HotKeyListenText", 581},           // Ctrl+E
     {"HotKeyTextRecognition", 585},      // Ctrl+I
     {"HotKeyReplaceSelection", 1620},    // Ctrl+Shift+T
@@ -222,7 +324,7 @@ const PresetHotkey kClassicHotkeys[] = {
 };
 
 const PresetHotkey kModernHotkeys[] = {
-    {"HotKeyQuickTranslate", 1617},      // Ctrl+Shift+Q
+    {"HotKeyQuickTranslate", 1623},      // Ctrl+Shift+W
     {"HotKeyListenText", 1612},          // Ctrl+Shift+L
     {"HotKeyTextRecognition", 1615},     // Ctrl+Shift+O
     {"HotKeyReplaceSelection", 1618},    // Ctrl+Shift+R
@@ -533,11 +635,17 @@ void OptionsDialog::buildUi()
 
     connect(resetButton, &QPushButton::clicked, this, &OptionsDialog::resetDefaults);
     connect(okButton, &QPushButton::clicked, this, [this] {
-        applyAll();
+        if (!validateHotkeys())
+            return;
+        // Hide the dialog first; the heavier settings/theme/plugin apply then
+        // runs while the window is already gone.
         accept();
+        applyAll();
     });
     connect(cancelButton, &QPushButton::clicked, this, [this] { reject(); });
     connect(m_applyButton, &QPushButton::clicked, this, [this] {
+        if (!validateHotkeys())
+            return;
         applyAll();
     });
 
@@ -1910,6 +2018,45 @@ void OptionsDialog::refreshHotkeyPlaceholders()
     apply(m_hotkeyEdits);
 }
 
+void OptionsDialog::captureUserHotkeys()
+{
+    QJsonObject internal;
+    QJsonObject global;
+    for (const HotkeyDefinition& definition : kHotkeys) {
+        const QString key = QString::fromLatin1(definition.key);
+        if (QKeySequenceEdit* editor = m_internalHotkeyEdits.value(key))
+            internal.insert(key, sequenceToNative(editor->keySequence()));
+        if (QKeySequenceEdit* editor = m_hotkeyEdits.value(key))
+            global.insert(key, sequenceToNative(editor->keySequence()));
+    }
+    m_userHotkeysInternal = internal;
+    m_userHotkeysGlobal = global;
+}
+
+void OptionsDialog::applyUserHotkeys()
+{
+    const bool hasTemplate =
+        !m_userHotkeysInternal.isEmpty() || !m_userHotkeysGlobal.isEmpty();
+    for (const HotkeyDefinition& definition : kHotkeys) {
+        const QString key = QString::fromLatin1(definition.key);
+        const int internal = hasTemplate
+            ? m_userHotkeysInternal.value(key).toInt(definition.internalDefault)
+            : definition.internalDefault;
+        int global = hasTemplate
+            ? m_userHotkeysGlobal.value(key).toInt(definition.globalDefault)
+            : definition.globalDefault;
+        if (key == QStringLiteral("HotKeyQuickTranslate") && global == 0)
+            global = 593; // Ctrl+Q popup in the user template
+        if (key == QStringLiteral("HotKeyReplaceSelection")
+            && (global == 0 || global == 593 || global == 1105))
+            global = 1617; // Ctrl+Shift+Q in the user template
+        if (QKeySequenceEdit* editor = m_internalHotkeyEdits.value(key))
+            editor->setKeySequence(nativeToSequence(internal));
+        if (QKeySequenceEdit* editor = m_hotkeyEdits.value(key))
+            editor->setKeySequence(nativeToSequence(global));
+    }
+}
+
 void OptionsDialog::captureHotkeySnapshot()
 {
     m_hotkeySnapshotInternal.clear();
@@ -1980,7 +2127,8 @@ void OptionsDialog::buildHotkeys(QVBoxLayout* layout)
 {
     addHint(layout, QStringLiteral(
         "Сочетания регистрируются через RegisterHotKey. Формат значения: "
-        "(modifiers << 8) | virtualKey; 0 — не задано."));
+        "(modifiers << 8) | virtualKey; 0 — не задано. Нажмите модификаторы, "
+        "затем завершающую клавишу; комбинация только из Ctrl/Shift/Alt не сохраняется."));
 
     QVBoxLayout* group = nullptr;
     createGroup(layout, QStringLiteral("Глобальные горячие клавиши"), &group);
@@ -2072,7 +2220,7 @@ void OptionsDialog::buildHotkeys(QVBoxLayout* layout)
             });
         };
 
-        auto* internal = new QKeySequenceEdit(m_hotkeyTable);
+        auto* internal = new HotkeySequenceEdit(m_hotkeyTable);
         internal->setMaximumSequenceLength(1);
         internal->setFixedHeight(30);
         internal->installEventFilter(this);
@@ -2083,7 +2231,7 @@ void OptionsDialog::buildHotkeys(QVBoxLayout* layout)
         connect(internal, &QKeySequenceEdit::keySequenceChanged, internal,
                 [refreshEditor, internal](const QKeySequence&) { refreshEditor(internal); });
 
-        auto* global = new QKeySequenceEdit(m_hotkeyTable);
+        auto* global = new HotkeySequenceEdit(m_hotkeyTable);
         global->setMaximumSequenceLength(1);
         global->setFixedHeight(30);
         global->installEventFilter(this);
@@ -2098,15 +2246,9 @@ void OptionsDialog::buildHotkeys(QVBoxLayout* layout)
         m_internalHotkeyEdits.insert(key, internal);
         m_hotkeyEdits.insert(key, global);
         connect(internal, &QKeySequenceEdit::keySequenceChanged, this,
-                [this, internal, handleHotkeyEdit](const QKeySequence&) {
-                    if (ensureHotkeyUnique(internal))
-                        handleHotkeyEdit();
-                });
+                [handleHotkeyEdit](const QKeySequence&) { handleHotkeyEdit(); });
         connect(global, &QKeySequenceEdit::keySequenceChanged, this,
-                [this, global, handleHotkeyEdit](const QKeySequence&) {
-                    if (ensureHotkeyUnique(global))
-                        handleHotkeyEdit();
-                });
+                [handleHotkeyEdit](const QKeySequence&) { handleHotkeyEdit(); });
     }
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget*, QWidget* now) {
         if (auto* editor = qobject_cast<QKeySequenceEdit*>(now))
@@ -2159,13 +2301,33 @@ void OptionsDialog::buildHotkeys(QVBoxLayout* layout)
             return;
         const QString preset = m_hotkeyPreset->currentData().toString();
         if (preset == QStringLiteral("user")) {
+            m_loadingHotkeys = true;
+            applyUserHotkeys();
+            m_loadingHotkeys = false;
+            m_activeHotkeyPreset = QStringLiteral("user");
+            captureHotkeySnapshot();
+            refreshHotkeyPlaceholders();
             if (m_context && m_context->settings)
                 m_context->settings->setValue(QStringLiteral("HotKeys.Preset"),
                                               QStringLiteral("user"));
+            scheduleLiveApply();
             return;
         }
+        if (m_activeHotkeyPreset == QStringLiteral("user"))
+            captureUserHotkeys();
+        m_activeHotkeyPreset = preset;
         m_loadingHotkeys = true;
         if (preset == QStringLiteral("classic") || preset == QStringLiteral("modern")) {
+            // These presets describe the in-app layout only. Clear stale global
+            // bindings from the previous template so the two columns cannot
+            // silently drift apart.
+            for (const HotkeyDefinition& definition : kHotkeys) {
+                const QString key = QString::fromLatin1(definition.key);
+                if (QKeySequenceEdit* editor = m_hotkeyEdits.value(key))
+                    editor->setKeySequence(QKeySequence());
+                if (QKeySequenceEdit* editor = m_internalHotkeyEdits.value(key))
+                    editor->setKeySequence(QKeySequence());
+            }
             const bool classic = preset == QStringLiteral("classic");
             const PresetHotkey* table = classic ? kClassicHotkeys : kModernHotkeys;
             const int count = classic ? int(sizeof(kClassicHotkeys) / sizeof(kClassicHotkeys[0]))
@@ -2175,6 +2337,10 @@ void OptionsDialog::buildHotkeys(QVBoxLayout* layout)
                 if (QKeySequenceEdit* editor = m_internalHotkeyEdits.value(key))
                     editor->setKeySequence(nativeToSequence(table[index].internal));
             }
+            // Ctrl+Shift+Q is the global replacement shortcut in every profile.
+            if (QKeySequenceEdit* editor =
+                    m_hotkeyEdits.value(QStringLiteral("HotKeyReplaceSelection")))
+                editor->setKeySequence(nativeToSequence(1617));
         } else {
             for (const HotkeyDefinition& definition : kHotkeys) {
                 const QString key = QString::fromLatin1(definition.key);
@@ -3571,6 +3737,11 @@ void OptionsDialog::loadAll()
         m_saveImagePath->setText(
             m_context->settings->stringValue(QStringLiteral("Ocr.SaveImagePath")));
 
+    m_userHotkeysInternal =
+        m_context->settings->value(QStringLiteral("HotKeys.UserInternal")).toObject();
+    m_userHotkeysGlobal =
+        m_context->settings->value(QStringLiteral("HotKeys.UserGlobal")).toObject();
+
     const QString storedPreset =
         m_context->settings->stringValue(QStringLiteral("HotKeys.Preset"),
                                         QStringLiteral("user"));
@@ -3595,6 +3766,20 @@ void OptionsDialog::loadAll()
                 || storedPreset == QStringLiteral("modern"))
                && internalHotkeysMatchPreset(storedPreset)) {
         effectivePreset = storedPreset;
+    }
+    m_activeHotkeyPreset = effectivePreset;
+    if (effectivePreset == QStringLiteral("user")) {
+        if (m_userHotkeysInternal.isEmpty() && m_userHotkeysGlobal.isEmpty())
+            captureUserHotkeys();
+        if (m_userHotkeysGlobal.value(QStringLiteral("HotKeyQuickTranslate")).toInt() == 0)
+            m_userHotkeysGlobal.insert(QStringLiteral("HotKeyQuickTranslate"), 593);
+        const int userReplace =
+            m_userHotkeysGlobal.value(QStringLiteral("HotKeyReplaceSelection")).toInt();
+        if (userReplace == 0 || userReplace == 593 || userReplace == 1105)
+            m_userHotkeysGlobal.insert(QStringLiteral("HotKeyReplaceSelection"), 1617);
+        m_loadingHotkeys = true;
+        applyUserHotkeys();
+        m_loadingHotkeys = false;
     }
     if (m_hotkeyPreset) {
         const QSignalBlocker blocker(m_hotkeyPreset);
@@ -3777,8 +3962,18 @@ void OptionsDialog::applyAll()
 
     if (m_context->router)
         m_context->router->reload();
-    if (m_context->hotkeys)
+    if (m_context->hotkeys) {
         m_context->hotkeys->reload();
+        const QStringList errors = m_context->hotkeys->registrationErrors();
+        if (!errors.isEmpty()) {
+            QMessageBox::warning(
+                nullptr, QStringLiteral("Горячие клавиши"),
+                QStringLiteral("Не удалось зарегистрировать глобальные сочетания:\n\n%1\n\n"
+                               "Проверьте, не занято ли сочетание другой программой, и "
+                               "назначьте другое. Для Shift+Q попробуйте добавить Ctrl или Alt.")
+                    .arg(errors.join(QLatin1Char('\n'))));
+        }
+    }
     emit settingsApplied();
 }
 
@@ -3790,7 +3985,6 @@ void OptionsDialog::applyLiveSettings()
     applyGeneric();
     applyLanguages();
     applyServices();
-    applyHotkeys();
     applyThemeSchedule();
 
     if (m_ocrLanguage)
@@ -3837,15 +4031,6 @@ void OptionsDialog::connectLiveApply()
                 [this](const QModelIndex&, const QModelIndex&, const QList<int>&) {
             scheduleLiveApply();
         });
-    }
-    for (auto it = m_hotkeyEdits.constBegin(); it != m_hotkeyEdits.constEnd(); ++it) {
-        connect(it.value(), &QKeySequenceEdit::keySequenceChanged, this,
-                &OptionsDialog::scheduleLiveApply);
-    }
-    for (auto it = m_internalHotkeyEdits.constBegin();
-         it != m_internalHotkeyEdits.constEnd(); ++it) {
-        connect(it.value(), &QKeySequenceEdit::keySequenceChanged, this,
-                &OptionsDialog::scheduleLiveApply);
     }
     if (m_rulesList) {
         connect(m_rulesList->model(), &QAbstractItemModel::rowsInserted, this,
@@ -3917,71 +4102,46 @@ bool OptionsDialog::hasPendingChanges() const
     return false;
 }
 
-bool OptionsDialog::ensureHotkeyUnique(QKeySequenceEdit* editor)
+bool OptionsDialog::validateHotkeys() const
 {
-    if (!editor || m_loadingHotkeys)
-        return true;
-    const QKeySequence sequence = editor->keySequence();
-    if (sequence.isEmpty())
-        return true;
-
-    QKeySequenceEdit* duplicate = nullptr;
-    QString duplicateKey;
-    QString ownKey;
-    bool ownInternal = false;
-    for (auto it = m_hotkeyEdits.constBegin(); it != m_hotkeyEdits.constEnd(); ++it) {
-        if (it.value() == editor) {
-            ownKey = it.key();
-            break;
+    const auto labelFor = [](const QString& key) {
+        for (const HotkeyDefinition& definition : kHotkeys) {
+            if (QString::fromLatin1(definition.key) == key)
+                return QString::fromUtf8(definition.label);
         }
-    }
-    if (ownKey.isEmpty()) {
-        for (auto it = m_internalHotkeyEdits.constBegin();
-             it != m_internalHotkeyEdits.constEnd(); ++it) {
-            if (it.value() == editor) {
-                ownKey = it.key();
-                ownInternal = true;
-                break;
-            }
-        }
-    }
-    const auto scan = [&](const QHash<QString, QKeySequenceEdit*>& edits) {
-        for (auto it = edits.constBegin(); it != edits.constEnd(); ++it) {
-            if (it.key() == ownKey)
-                continue;
-            if (it.value() != editor && it.value()
-                && it.value()->keySequence() == sequence) {
-                duplicate = it.value();
-                duplicateKey = it.key();
-                return;
-            }
-        }
+        return key;
     };
-    scan(m_hotkeyEdits);
-    if (!duplicate)
-        scan(m_internalHotkeyEdits);
-    if (!duplicate)
-        return true;
 
-    QString label = duplicateKey;
-    for (const HotkeyDefinition& definition : kHotkeys) {
-        if (QString::fromLatin1(definition.key) == duplicateKey) {
-            label = QString::fromUtf8(definition.label);
-            break;
+    const auto validateScope = [&](const QHash<QString, QKeySequenceEdit*>& edits,
+                                   const QString& scope) {
+        QHash<QString, QString> seen;
+        for (auto it = edits.constBegin(); it != edits.constEnd(); ++it) {
+            QKeySequenceEdit* editor = it.value();
+            if (!editor)
+                continue;
+            const QKeySequence sequence = editor->keySequence();
+            if (sequence.isEmpty())
+                continue;
+            const QString text = sequence.toString(QKeySequence::NativeText);
+            if (seen.contains(text)) {
+                QMessageBox::warning(
+                    const_cast<OptionsDialog*>(this),
+                    QStringLiteral("Горячие клавиши"),
+                    Localization::tr(
+                        "Сочетание %1 уже назначено в %2:\n%3\n%4")
+                        .arg(text, scope, labelFor(seen.value(text)),
+                             labelFor(it.key())));
+                return false;
+            }
+            seen.insert(text, it.key());
         }
-    }
-    QMessageBox::warning(
-        this, QStringLiteral("Горячие клавиши"),
-        Localization::tr(QStringLiteral("Сочетание %1 уже назначено: %2."))
-            .arg(sequence.toString(QKeySequence::NativeText), label));
+        return true;
+    };
 
-    const QSignalBlocker blocker(editor);
-    const QKeySequence previous = ownInternal
-        ? m_hotkeySnapshotInternal.value(ownKey)
-        : m_hotkeySnapshotGlobal.value(ownKey);
-    editor->setKeySequence(previous);
-    refreshHotkeyPlaceholders();
-    return false;
+    return validateScope(m_internalHotkeyEdits,
+                         Localization::tr("горячих клавишах приложения"))
+        && validateScope(m_hotkeyEdits,
+                         Localization::tr("глобальных горячих клавишах"));
 }
 
 bool OptionsDialog::eventFilter(QObject* watched, QEvent* event)
@@ -3998,6 +4158,7 @@ bool OptionsDialog::eventFilter(QObject* watched, QEvent* event)
             const QSignalBlocker blocker(m_hotkeyPreset);
             m_hotkeyPreset->setCurrentIndex(
                 m_hotkeyPreset->findData(QStringLiteral("user")));
+            m_activeHotkeyPreset = QStringLiteral("user");
             if (m_context && m_context->settings) {
                 m_context->settings->setValue(QStringLiteral("HotKeys.Preset"),
                                               QStringLiteral("user"));
@@ -4306,9 +4467,16 @@ void OptionsDialog::applyHotkeys()
                                           sequenceToNative(editor->keySequence()));
         }
     }
-    if (m_hotkeyPreset)
+    if (m_hotkeyPreset) {
         m_context->settings->setValue(QStringLiteral("HotKeys.Preset"),
                                       m_hotkeyPreset->currentData().toString());
+        if (m_activeHotkeyPreset == QStringLiteral("user"))
+            captureUserHotkeys();
+        m_context->settings->setValue(QStringLiteral("HotKeys.UserInternal"),
+                                      m_userHotkeysInternal);
+        m_context->settings->setValue(QStringLiteral("HotKeys.UserGlobal"),
+                                      m_userHotkeysGlobal);
+    }
 }
 
 void OptionsDialog::applyStartup()

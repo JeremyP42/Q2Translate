@@ -148,7 +148,9 @@ private:
     void loadPopupStyleFontSizes();
     void applyPopupStyleFontSizes();
     void refreshHotkeyPlaceholders();
-    bool ensureHotkeyUnique(QKeySequenceEdit* editor);
+    bool validateHotkeys() const;
+    void captureUserHotkeys();
+    void applyUserHotkeys();
     void captureHotkeySnapshot();    bool hotkeysMatchSnapshot() const;
     bool internalHotkeysMatchPreset(const QString& preset) const;
     bool hotkeysMatchDefaults() const;
@@ -193,6 +195,9 @@ private:
     QHash<QString, QKeySequence> m_hotkeySnapshotGlobal;
     QComboBox* m_hotkeyPreset = nullptr;
     QKeySequenceEdit* m_lastHotkeyEditor = nullptr;
+    QJsonObject m_userHotkeysInternal;
+    QJsonObject m_userHotkeysGlobal;
+    QString m_activeHotkeyPreset = QStringLiteral("user");
 
     QLabel* m_pluginDetails = nullptr;
     QWidget* m_connectorFormHost = nullptr;

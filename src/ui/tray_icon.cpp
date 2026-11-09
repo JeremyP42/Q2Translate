@@ -1,5 +1,7 @@
 #include "tray_icon.h"
 
+#include "services/plugin_manager.h"
+
 #include "core/settings_manager.h"
 #include "icon_factory.h"
 
@@ -8,9 +10,10 @@
 #include <QSignalBlocker>
 #include <QSystemTrayIcon>
 
-TrayIcon::TrayIcon(SettingsManager* settings, QObject* parent)
+TrayIcon::TrayIcon(SettingsManager* settings, PluginManager* plugins, QObject* parent)
     : QObject(parent)
     , m_settings(settings)
+    , m_plugins(plugins)
 {
     m_tray = new QSystemTrayIcon(IconFactory::appIcon(), this);
     m_tray->setToolTip(QStringLiteral("Q2Translate"));
@@ -91,9 +94,21 @@ void TrayIcon::updateServiceVisibility()
     if (m_historyAction)
         m_historyAction->setVisible(
             m_settings->boolValue(QStringLiteral("General.EnableHistory"), false));
-    if (m_dictionaryAction)
-        m_dictionaryAction->setVisible(
-            m_settings->boolValue(QStringLiteral("ServiceProviders.dictOn"), false));
+    if (m_dictionaryAction) {
+        bool available = false;
+        if (m_plugins) {
+            for (const PluginManifest& manifest : m_plugins->manifests()) {
+                if (manifest.valid
+                    && manifest.capabilities.contains(QStringLiteral("dictionary"))
+                    && !m_plugins->isDisabled(manifest.id)
+                    && m_plugins->provider(manifest.id)) {
+                    available = true;
+                    break;
+                }
+            }
+        }
+        m_dictionaryAction->setVisible(available);
+    }
     if (m_ocrAction)
         m_ocrAction->setVisible(
             m_settings->boolValue(QStringLiteral("ServiceProviders.ocrOn"), true));

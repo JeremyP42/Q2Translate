@@ -1,5 +1,9 @@
 {
   "Language": "Français",
+  "Undo": "Annuler",
+  "Redo": "Rétablir",
+  "Cut": "Couper",
+  "Paste": "Coller",
   "+Add": "+ Ajouter",
   "<p>History is empty.</p>": "<p>L'historique est vide.</p>",
   "<p>Nothing found.</p>": "<p>Aucun résultat.</p>",

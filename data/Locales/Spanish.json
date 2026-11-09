@@ -1,5 +1,9 @@
 {
   "Language": "Español",
+  "Undo": "Deshacer",
+  "Redo": "Rehacer",
+  "Cut": "Cortar",
+  "Paste": "Pegar",
   "+Add": "+ Agregar",
   "<p>History is empty.</p>": "<p>El historial está vacío.</p>",
   "<p>Nothing found.</p>": "<p>No se encontró nada.</p>",

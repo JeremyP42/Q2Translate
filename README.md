@@ -43,7 +43,7 @@ Portable Windows translation workspace with 49 connectors, OCR, document transla
 
 - **Translation**: 17 online services, parallel requests to several connectors with one result tab per service, back translation, instant translation while typing, and mouse mode — hold `Ctrl` and select text with the mouse in any application.
 - **Dictionaries**: 11 online dictionaries plus local XDXF files with exact-match search.
-- **OCR**: capture a screen region (`Win+Shift+Q`), paste or drop images, and translate whole pages of images in place. Engines: Windows OCR, local Tesseract and PaddleOCR (ONNX) in the full build, or a vision LLM - one per file type (screen, images, PDF, DJVU).
+- **OCR**: capture a screen region (`Win+Shift+Q`), paste or drop images, and translate whole pages of images in place. Engines: Windows OCR, local Tesseract and PaddleOCR (local) in the full build, or a vision LLM - one per file type (screen, images, PDF, DJVU).
 - **Spelling**: Hunspell, Nuspell, or Windows Spell Checking with downloadable dictionaries and correction suggestions. The dictionary follows the automatically detected language of the source text (Russian for Cyrillic, English for Latin).
 - **Speech**: text-to-speech for the source and the translation, voice input in the source editor through Windows speech recognition.
 - **Documents**: layout-preserving translation of DOCX, PPTX, PDF (text layer and scans), DJVU, EPUB, FB2, XLIFF, subtitles, and 15+ other formats, plus a batch window for whole folders.
@@ -53,7 +53,7 @@ Portable Windows translation workspace with 49 connectors, OCR, document transla
 
 ### OCR by file type
 
-The engine is chosen per file group in **Settings → OCR** ("OCR for screenshots", "OCR for images", "OCR for PDF", "OCR for DJVU"); an empty value falls back to the general OCR connector. Available engines: Windows OCR, Tesseract, PaddleOCR (ONNX), and vision-capable LLM connectors.
+The engine is chosen per file group in **Settings → OCR** ("OCR for screenshots", "OCR for images", "OCR for PDF", "OCR for DJVU"). Available engines: Windows OCR, Tesseract, PaddleOCR (local), and vision-capable LLM connectors.
 
 | Group | Trigger | Pipeline | Result |
 |---|---|---|---|
@@ -129,10 +129,21 @@ Full UI reference: [Interface documentation](docs/INTERFACE.md).
 
 | Action | Default |
 |---|---|
-| Quick translation of the selection or clipboard | `Ctrl+Q` |
+| Translation in the popup window (selection or clipboard) | Unassigned — set in **Settings → Hotkeys** |
 | OCR screen capture | `Win+Shift+Q` |
 | Show the main window | Double `Ctrl` |
-| Listen, replace selection, dictionary, history, document, clipboard translation, focus fields | Unassigned — set in **Settings → Hotkeys** |
+| Replace the selection with its translation | `Ctrl+Shift+Q` |
+| Listen, dictionary, history, document, clipboard translation, focus fields | Unassigned — set in **Settings → Hotkeys** |
+
+Modifiers appear in the cell as you press them; the binding is saved only after a final non-modifier key. A combination made only of Ctrl/Shift/Alt is discarded.
+
+Duplicate shortcuts are checked separately for in-app and global bindings when you press **OK** or **Save**; the settings window stays open if a duplicate is found.
+
+In the **User** template the popup translation defaults to `Ctrl+Q` and replacement to `Ctrl+Shift+Q`; the standard template leaves the popup unassigned and uses `Ctrl+Shift+Q` for replacement.
+
+The **User** template is stored separately: switching to classic, modern or default does not overwrite your custom bindings, and switching back restores them.
+
+If Windows or another application already owns a global combination, the save shows a warning with the registration error and asks you to choose another key.
 
 The hotkey editor ships two presets: **classic** (`Ctrl+E` listen, `Ctrl+D` dictionary, `Ctrl+I` OCR, `Ctrl+Shift+T` replace selection) and **modern** (`Ctrl+Shift+L`, `Ctrl+Shift+D`, `Ctrl+Shift+O`, `Ctrl+Shift+R`).
 
@@ -166,9 +177,9 @@ An update is the same archive unpacked over the old folder: the executable and `
 
 Every release is built as two portable archives from the same sources and with the same version:
 
-| Build | Archive | Size (2.8.1) | What is inside |
+| Build | Archive | Size (2.8.18) | What is inside |
 |---|---|---:|---|
-| **Full** | `Q2TranslatePortable_full_v<version>.zip` | ~172 MB | Tesseract, PaddleOCR (ONNX Runtime + PP-OCRv5 models) and the Nuspell connector are bundled. All OCR engines and all spelling backends work offline. |
+| **Full** | `Q2TranslatePortable_full_v<version>.zip` | ~172 MB | Tesseract, PaddleOCR (local, ONNX Runtime + PP-OCRv5 models) and the Nuspell connector are bundled. All OCR engines and all spelling backends work offline. |
 | **Small** | `Q2TranslatePortable_small_v<version>.zip` | ~47 MB | The Tesseract, PaddleOCR and Nuspell connector directories, engines and models are removed. OCR defaults to the built-in Windows OCR; spell checking defaults to Hunspell. |
 
 Notes:

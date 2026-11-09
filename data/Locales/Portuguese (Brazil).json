@@ -1,5 +1,9 @@
 {
   "Language": "Português (Brasil)",
+  "Undo": "Desfazer",
+  "Redo": "Refazer",
+  "Cut": "Recortar",
+  "Paste": "Colar",
   "+Add": "+ Adicionar",
   "<p>History is empty.</p>": "<p>O histórico está vazio.</p>",
   "<p>Nothing found.</p>": "<p>Nada encontrado.</p>",

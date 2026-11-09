@@ -1,5 +1,9 @@
 {
   "Language": "日本語",
+  "Undo": "元に戻す",
+  "Redo": "やり直す",
+  "Cut": "切り取り",
+  "Paste": "貼り付け",
   "+Add": "+ 追加",
   "<p>History is empty.</p>": "<p>履歴は空です。</p>",
   "<p>Nothing found.</p>": "<p>何も見つかりませんでした。</p>",
